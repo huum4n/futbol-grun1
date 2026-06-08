@@ -344,6 +344,8 @@ tbody td{padding:10px 14px;font-size:14px;color:var(--text)}
 .heatmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:3px;margin:12px 0}
 .hm{width:16px;height:16px;border-radius:2px}
 .hm.played{background:var(--blue-mid)}
+.saf-st{background:rgba(239,68,68,0.2);color:#fca5a5}
+.humo-st{background:rgba(100,116,139,0.2);color:#94a3b8}
 .hm.watched{background:var(--teal);opacity:0.7}
 .hm.absent{background:rgba(255,255,255,0.05)}
 .hm.before{background:transparent}
@@ -820,6 +822,12 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 @keyframes dot-pulse{0%,80%,100%{opacity:.2;transform:scale(0.8)}40%{opacity:1;transform:scale(1)}}
 
 .wc-filter-btn.wc-active{background:var(--teal)!important;color:var(--bg)!important;border-color:var(--teal)!important}
+.badge-humo{background:rgba(148,163,184,0.15);color:#94a3b8;border:1px solid rgba(148,163,184,0.3)}
+.badge-saf{background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.25)}
+.badge-ina{background:rgba(100,116,139,0.15);color:#cbd5e1;border:1px solid rgba(100,116,139,0.3)}
+.badge-gol{background:rgba(245,158,11,0.15);color:#fcd34d;border:1px solid rgba(245,158,11,0.3)}
+.badge-ley{background:rgba(234,179,8,0.15);color:#fde047;border:1px solid rgba(234,179,8,0.3)}
+.badge-mala{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
 </style>
 </head>
 <body>
@@ -1020,7 +1028,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         <div class="form-group">
           <label class="flabel">¿Quiénes fueron?</label>
           <input class="ps-search" id="ps-search" placeholder="Buscar jugador..." oninput="filterPS('ps-grid','ps')">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--grey);margin-bottom:8px">1 click = ⚪ Blanco &nbsp;·&nbsp; 2 clicks = ⚫ Negro &nbsp;·&nbsp; 3 clicks = 👁️ O &nbsp;·&nbsp; 4 clicks = Quitar</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--grey);margin-bottom:8px">1=⚪ Blanco &nbsp;·&nbsp; 2=⚫ Negro &nbsp;·&nbsp; 3=👁️ Hincha &nbsp;·&nbsp; 4=🚑 SAF &nbsp;·&nbsp; 5=💨 Humo &nbsp;·&nbsp; 6=Quitar</div>
           <div class="ps-counter">Jugaron: <span id="ps-cx">0</span> · Vieron: <span id="ps-co">0</span> · Total: <span id="ps-ct">0</span></div>
           <div class="ps-grid" id="ps-grid"></div>
         </div>
@@ -1067,7 +1075,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <div class="form-group">
             <label class="flabel">Asistencias</label>
             <input class="ps-search" id="eps-search" placeholder="Buscar..." oninput="filterPS('eps-grid','eps')">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--grey);margin-bottom:8px">1 click = ⚪ Blanco &nbsp;·&nbsp; 2 clicks = ⚫ Negro &nbsp;·&nbsp; 3 clicks = 👁️ O &nbsp;·&nbsp; 4 clicks = Quitar</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:1px;color:var(--grey);margin-bottom:8px">1=⚪ Blanco &nbsp;·&nbsp; 2=⚫ Negro &nbsp;·&nbsp; 3=👁️ Hincha &nbsp;·&nbsp; 4=🚑 SAF &nbsp;·&nbsp; 5=💨 Humo &nbsp;·&nbsp; 6=Quitar</div>
           <div class="ps-counter">Jugaron: <span id="eps-cx">0</span> · Vieron: <span id="eps-co">0</span></div>
             <div class="ps-grid" id="eps-grid"></div>
           </div>
@@ -1336,6 +1344,41 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 <div id="lightbox" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.92);cursor:pointer;align-items:center;justify-content:center" onclick="closeLightbox()">
   <img id="lb-img" style="max-width:92vw;max-height:90vh;border-radius:8px;object-fit:contain;box-shadow:0 0 60px rgba(0,0,0,0.8)">
   <div style="position:absolute;top:18px;right:24px;color:white;font-size:28px;cursor:pointer;line-height:1" onclick="closeLightbox()">✕</div>
+
+  <!-- FOOTER -->
+  <footer style="margin-top:48px;padding:24px 20px;border-top:1px solid var(--border);text-align:center">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--grey);letter-spacing:1px;line-height:1.8">
+      <div style="margin-bottom:8px">
+        <a href="#s-faq" onclick="showSection('faq',document.querySelector('[onclick*=faq]'))" style="color:var(--grey);text-decoration:none;margin:0 10px">FAQ</a>
+        <span style="color:var(--border)">·</span>
+        <a href="#" onclick="document.getElementById('modal-tyc').style.display='flex';return false;" style="color:var(--grey);text-decoration:none;margin:0 10px">Términos y Condiciones</a>
+      </div>
+      <div>🌎 Fútbol Martes 20hs GRUN · Colegio Champagnat, Buenos Aires · Desde julio 2025</div>
+      <div style="margin-top:4px;font-size:11px;opacity:0.6">Hecho con Claude por</div>
+    </div>
+  </footer>
+
+  <!-- MODAL T&C -->
+  <div id="modal-tyc" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:var(--bg-card);border-radius:14px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:28px;border:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white)">Términos y Condiciones</div>
+        <button onclick="document.getElementById('modal-tyc').style.display='none'" style="background:none;border:none;color:var(--grey);font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.8">
+        <div style="color:var(--grey);font-size:11px;margin-bottom:16px">Versión 1.0 · Vigente desde julio 2025</div>
+        <p><strong style="color:var(--white)">1. Participación</strong><br>Al aparecer en esta web, el jugador acepta que sus estadísticas, rachas, ausencias y humadas sean de dominio público para el grupo.</p>
+        <p><strong style="color:var(--white)">2. El Humo</strong><br>Confirmar y no aparecer resta 0.5 puntos. No hay apelación. No hay excusa válida. Ni el tráfico, ni el trabajo, ni "se me olvidó".</p>
+        <p><strong style="color:var(--white)">3. El SAF</strong><br>Si confirmaste y no podés jugar pero aparecés igual, el grupo reconoce tu esfuerzo con 0 puntos y una ambulancia en tu perfil.</p>
+        <p><strong style="color:var(--white)">4. Los datos</strong><br>Los datos son los datos. Si el admin cargó mal algo, se puede corregir. Si cargó bien y no te gusta, no se puede corregir.</p>
+        <p><strong style="color:var(--white)">5. El Premio Brunato</strong><br>Los criterios son secretos, subjetivos e inapelables. Nadie sabe exactamente cómo se gana.</p>
+        <p><strong style="color:var(--white)">6. El Ranking</strong><br>El ranking es la verdad absoluta. No se discute en la cancha, no se discute en el grupo de WhatsApp.</p>
+        <p><strong style="color:var(--white)">7. Privacidad</strong><br>Esta web tiene contraseña. Si alguien que no es del grupo la conoce, es problema del que la compartió.</p>
+        <p><strong style="color:var(--white)">8. Modificaciones</strong><br>Estos términos pueden cambiar en cualquier momento sin previo aviso. Nadie los va a leer de todas formas.</p>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -1381,7 +1424,8 @@ async function loadDB(){
   ]);
   DB.matches=matches.map(m=>({_id:m.id,date:m.date,n:m.n,type:m.type,
     attendance:m.attendance||{},mvp:m.mvp,goals:m.goals||{},created_at:m.created_at,
-    teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null}));
+    teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null,
+    humo:m.humo||[],saf:m.saf||[]}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
   DB.frases=frases.map(f=>({_id:f.id,text:f.text,author:f.author,date:f.date_str,nick:f.nick,created_at:f.created_at}));
@@ -1452,22 +1496,26 @@ function getStats(){
   sorted.forEach(m=>Object.keys(m.attendance).forEach(p=>allP.add(p)));
   const stats={};
   allP.forEach(p=>{
-    let pts=0,played=0,watched=0,tempS=0,maxS=0;
+    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0;
     let debut=null,started=false;
     const hist=[];
     sorted.forEach(m=>{
       const v=m.attendance[p];
-      if(!started&&v){started=true;debut=m.date;}
+      const isHumo=m.humo&&m.humo.includes(p);
+      const isSAF=m.saf&&m.saf.includes(p);
+      if(!started&&(v||isHumo)){started=true;debut=m.date;}
       if(!started){hist.push('b');return;}
-      if(v==='X'){pts+=1;played++;tempS++;maxS=Math.max(maxS,tempS);hist.push('X');}
+      if(isHumo){pts-=0.5;humoCount++;tempS=0;hist.push('H');}
+      else if(isSAF){safCount++;tempS++;maxS=Math.max(maxS,tempS);hist.push('SAF');}
+      else if(v==='X'){pts+=1;played++;tempS++;maxS=Math.max(maxS,tempS);hist.push('X');}
       else if(v==='O'){pts+=0.4;watched++;tempS++;maxS=Math.max(maxS,tempS);hist.push('O');}
       else{tempS=0;hist.push('-');}
     });
     let curS=0;
     for(let i=hist.length-1;i>=0;i--){
       if(hist[i]==='b')break;
-      if(hist[i]==='-')break;
-      curS++;
+      if(hist[i]==='X'||hist[i]==='O'||hist[i]==='SAF'){curS++;}
+      else break;
     }
     const totalSince=hist.filter(h=>h!=='b').length;
     const pct=totalSince>0?Math.round((played+watched)/totalSince*100):0;
@@ -1475,7 +1523,7 @@ function getStats(){
     const s25=sorted.filter(m=>m.date.startsWith('2025'));
     const s26=sorted.filter(m=>m.date.startsWith('2026'));
     const calcYr=ms=>{const rel=ms.filter(m=>m.date>=(stats[p]?.debut||'9999'));if(!rel.length)return null;const x=rel.filter(m=>m.attendance[p]==='X'||m.attendance[p]==='O').length;return Math.round(x/rel.length*100);};
-    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:calcYr(s25),pct26:calcYr(s26)};
+    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:calcYr(s25),pct26:calcYr(s26),humoCount,safCount};
   });
   // Financista counts from matches (dynamic)
   const finFromMatches={};
@@ -1505,10 +1553,32 @@ function getBadges(name,stats,rank){
   // Hincha
   if(s.watched>0) b.push({cls:'hincha',lbl:'Hincha'});
   if(name==='Kuza'||name==='Batata') b.unshift({cls:'badge-dt',lbl:'📋 DT'});
-  // Financista badge (static base + dynamic from matches)
+  // Financista
   const FIN_STATIC={Batata:10,Gonza:6,Manolo:5,Nico:4,Tony:3,Paco:2,Hueso:1,Emi:1};
   const finTotal=(FIN_STATIC[name]||0)+(s.finDynamic||0);
   if(finTotal>0) b.unshift({cls:'badge-fin',lbl:'💰 ×'+finTotal});
+  // Humo
+  if(s.humoCount>0) b.push({cls:'badge-humo',lbl:'💨 ×'+s.humoCount});
+  // SAF
+  if(s.safCount>0) b.push({cls:'badge-saf',lbl:'🚑 ×'+s.safCount});
+  // Inamovible: nunca humo ni saf + top 16
+  if(s.humoCount===0&&s.safCount===0&&rank>=1&&rank<=16) b.push({cls:'badge-ina',lbl:'🧱 Inamovible'});
+  // Goleador: top 3
+  const allGoals={};
+  DB.matches.forEach(function(m){Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)allGoals[e[0]]=(allGoals[e[0]]||0)+e[1];});});
+  const topGoals=Object.entries(allGoals).sort(function(a,b){return b[1]-a[1];}).slice(0,3).map(function(e){return e[0];});
+  if(topGoals.includes(name)) b.push({cls:'badge-gol',lbl:'🎯 Goleador'});
+  // Leyenda: mas partidos jugados
+  const maxPlayed=Math.max.apply(null,Object.values(stats).map(function(st){return st.played;}));
+  if(s.played===maxPlayed&&s.played>0) b.push({cls:'badge-ley',lbl:'👑 Leyenda'});
+  // Mala racha: mayor racha de ausencias
+  const maxAbs=Math.max.apply(null,Object.values(stats).map(function(st){
+    let max=0,cur=0;
+    st.hist.forEach(function(h){if(h==='-'){cur++;max=Math.max(max,cur);}else if(h!=='b'){cur=0;}});
+    return max;
+  }));
+  const myAbs=(function(){let max=0,cur=0;s.hist.forEach(function(h){if(h==='-'){cur++;max=Math.max(max,cur);}else if(h!=='b'){cur=0;}});return max;})();
+  if(myAbs===maxAbs&&myAbs>=3) b.push({cls:'badge-mala',lbl:'💀 Mala racha'});
   return b;
 }
 
@@ -1762,7 +1832,8 @@ function renderPartidos(sorted){
           </div>
         </div>`;
         return`<div class="player-chips" style="margin-bottom:8px">${xp.map(([n])=>`<div class="chip" onclick="event.stopPropagation();openModal('${n}')">${n}</div>`).join('')}</div>`})()}
-        ${op.length?`<div class="player-chips" style="margin-bottom:4px">${op.map(([n])=>`<div class="chip o" onclick="event.stopPropagation();openModal('${n}')">${n} 👁️</div>`).join('')}</div>`:''}
+        ${op.length?`<div class="player-chips" style="margin-bottom:4px">${op.map(([n])=>{const isSAF=m.saf&&m.saf.includes(n);return`<div class="chip o" onclick="event.stopPropagation();openModal('${n}')">${n} ${isSAF?'🚑':'👁️'}</div>`;}).join('')}</div>`:''}
+        ${m.humo&&m.humo.length?`<div class="player-chips" style="margin-bottom:4px">${m.humo.map(n=>`<div class="chip" style="background:rgba(148,163,184,0.15);color:#94a3b8" onclick="event.stopPropagation();openModal('${n}')">${n} 💨</div>`).join('')}</div>`:''}
         ${m.financista?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#86efac;margin-top:8px">💰 Pagó la cancha: ${m.financista}</div>`:''}
         ${goals.length?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px;margin-bottom:5px">⚽ GOLES</div><div class="player-chips">${goals.map(([n,g])=>`<div class="chip">${n}: ${g}</div>`).join('')}</div>`:''}
       </div>
@@ -1960,8 +2031,8 @@ function renderPS(gridId,cxId,coId,ctId,prefix){
   const state=prefix==='ps'?psState:epsState;
   document.getElementById(gridId).innerHTML=DB.players.map(p=>{
     const v=state[p];
-    const cls=v==='X'?'played':v==='O'?'watched':'';
-    const ico=v==='X'?'⚽':v==='O'?'👁️':'—';
+    const cls=v==='B'||v==='N'?'played':v==='O'?'watched':v==='SAF'?'saf-st':v==='H'?'humo-st':'';
+    const ico=v==='B'?'⚪':v==='N'?'⚫':v==='O'?'👁️':v==='SAF'?'🚑':v==='H'?'💨':'—';
     const pid=prefix+'-'+p.replace(/[^a-z0-9]/gi,'_');
     const dn=p.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
     const disp=p.length>14?p.substring(0,13)+'…':p;
@@ -1976,13 +2047,15 @@ function togglePS(name,prefix){
   const coId=prefix==='ps'?'ps-co':'eps-co';
   const ctId=prefix==='ps'?'ps-ct':null;
   const cur=state[name];
-  state[name]=!cur?'B':cur==='B'?'N':cur==='N'?'O':null;
+  state[name]=!cur?'B':cur==='B'?'N':cur==='N'?'O':cur==='O'?'SAF':cur==='SAF'?'H':null;
   const pid=prefix+'-'+name.replace(/[^a-z0-9]/gi,'_');
   const btn=document.getElementById(pid);
   if(btn){
     const v=state[name];
-    btn.className=`psbtn ${v==='B'?'blanco':v==='N'?'negro':v==='O'?'watched':''}`;
-    btn.innerHTML=`${name.length>14?name.substring(0,13)+'…':name}<span class="psico">${v==='B'?'⚪':v==='N'?'⚫':v==='O'?'👁️':'—'}</span>`;
+    const clsMap={'B':'blanco','N':'negro','O':'watched','SAF':'saf-st','H':'humo-st'};
+    const icoMap={'B':'⚪','N':'⚫','O':'👁️','SAF':'🚑','H':'💨'};
+    btn.className=`psbtn ${clsMap[v]||''}`;
+    btn.innerHTML=`${name.length>14?name.substring(0,13)+'…':name}<span class="psico">${icoMap[v]||'—'}</span>`;
   }
   updatePSCount(cxId,coId,ctId,state);
   // Update goals list for new match
@@ -1993,9 +2066,17 @@ function togglePS(name,prefix){
 function updatePSCount(cxId,coId,ctId,state){
   const x=Object.values(state).filter(v=>v==='B'||v==='N').length;
   const o=Object.values(state).filter(v=>v==='O').length;
+  const saf=Object.values(state).filter(v=>v==='SAF').length;
+  const h=Object.values(state).filter(v=>v==='H').length;
   document.getElementById(cxId).textContent=x;
   document.getElementById(coId).textContent=o;
-  if(ctId)document.getElementById(ctId).textContent=x+o;
+  if(ctId){
+    let txt=`Jugaron: ${x} · Vieron: ${o}`;
+    if(saf)txt+=` · 🚑 SAF: ${saf}`;
+    if(h)txt+=` · 💨 Humo: ${h}`;
+    txt+=` · Total: ${x+o+saf+h}`;
+    document.getElementById(ctId).textContent=txt;
+  }
 }
 
 function filterPS(gridId,prefix){
@@ -2007,7 +2088,7 @@ function filterPS(gridId,prefix){
 }
 
 function updateGoalsList(listId,state){
-  const xPlayers=Object.entries(state).filter(([,v])=>v==='X').map(([p])=>p);
+  const xPlayers=Object.entries(state).filter(([,v])=>v==='B'||v==='N').map(([p])=>p);
   const el=document.getElementById(listId);
   if(!el)return;
   if(!xPlayers.length){el.innerHTML='<div class="empty" style="padding:10px;font-size:11px">Seleccioná jugadores primero</div>';return;}
@@ -2020,7 +2101,7 @@ function updateGoalsList(listId,state){
 
 function getGoalsFromUI(state){
   const goals={};
-  Object.entries(state).filter(([,v])=>v==='X').forEach(([p])=>{
+  Object.entries(state).filter(([,v])=>v==='B'||v==='N').forEach(([p])=>{
     const id='g-'+p.replace(/[^a-z0-9]/gi,'_');
     const el=document.getElementById(id);
     if(el){const g=parseInt(el.value)||0;if(g>0)goals[p]=g;}
@@ -2049,23 +2130,26 @@ function buildDatalist(){
 async function saveNewMatch(){
   const date=document.getElementById('np-date').value;
   if(!date){showToast('Ingresá la fecha del partido','err');return;}
-  const xCount=Object.values(psState).filter(v=>v==='X').length;
+  const xCount=Object.values(psState).filter(v=>v==='B'||v==='N').length;
   if(xCount===0){showToast('Seleccioná al menos un jugador','err');return;}
   const type=document.getElementById('np-type').value;
   const mvp=document.getElementById('np-mvp').value.trim()||null;
   const financista=document.getElementById('np-financista').value.trim()||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
+  const humo_list=[];const saf_list=[];
   Object.entries(psState).forEach(([p,v])=>{
     if(v==='B'){attendance[p]='X';teams_data.blanco.push(p);}
     else if(v==='N'){attendance[p]='X';teams_data.negro.push(p);}
     else if(v==='O'){attendance[p]='O';}
+    else if(v==='SAF'){saf_list.push(p);attendance[p]='O';}
+    else if(v==='H'){humo_list.push(p);}
   });
   const goals=getGoalsFromUI(psState);
   showToast('Guardando...','');
   try{
-    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,goals,teams:teams_data,financista});
-    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,goals});
+    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,goals,teams:teams_data,financista,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
+    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,goals,teams:teams_data,financista,humo:humo_list,saf:saf_list});
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();
     renderAdminMatchList();
@@ -2127,23 +2211,26 @@ async function saveEditMatch(){
   const idx=parseInt(document.getElementById('edit-idx').value);
   const date=document.getElementById('edit-date').value;
   if(!date){showToast('Ingresá la fecha','err');return;}
-  const x=Object.values(epsState).filter(v=>v==='X').length;
+  const x=Object.values(epsState).filter(v=>v==='B'||v==='N').length;
   if(x===0){showToast('Seleccioná al menos un jugador','err');return;}
   const type=document.getElementById('edit-type').value;
   const mvp=document.getElementById('edit-mvp').value.trim()||null;
   const financista=document.getElementById('edit-financista').value.trim()||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
+  const e_humo=[];const e_saf=[];
   Object.entries(epsState).forEach(([p,v])=>{
     if(v==='B'){attendance[p]='X';teams_data.blanco.push(p);}
     else if(v==='N'){attendance[p]='X';teams_data.negro.push(p);}
     else if(v==='O'){attendance[p]='O';}
+    else if(v==='SAF'){e_saf.push(p);attendance[p]='O';}
+    else if(v==='H'){e_humo.push(p);}
   });
   const goals=getGoalsFromUI(epsState);
   const matchId=DB.matches[idx]._id;
   try{
-    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,goals,teams:teams_data,financista});
-    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,goals};
+    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,goals,teams:teams_data,financista,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
+    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,goals,teams:teams_data,financista,humo:e_humo,saf:e_saf};
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();renderAdminMatchList();backToList();
     showToast('Partido actualizado ✓');
@@ -2785,6 +2872,13 @@ function renderWeirdStats(){
 
 
 
+  // 17b. El más Humo
+  const humoRanking=Object.entries(stats).filter(function(e){return(e[1].humoCount||0)>0;}).sort(function(a,b){return b[1].humoCount-a[1].humoCount;});
+  if(humoRanking.length>0){
+    const topHumo=humoRanking[0];
+    cards.push({icon:'💨',title:'El más Humo',winner:topHumo[0],val:topHumo[1].humoCount+'x',color:'#94a3b8'});
+  }
+
   // 18. Rey del podio — más apariciones en top 3 mensual
   const monthGroupsR={};
   sorted.forEach(m=>{const k=m.date.substring(0,7);if(!monthGroupsR[k])monthGroupsR[k]=[];monthGroupsR[k].push(m);});
@@ -3301,7 +3395,7 @@ function setWCFilter(f,btn){
 // ══════════════════════════════════════════
 // FAQ
 // ══════════════════════════════════════════
-const FAQ_DATA = [["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking cae, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. Suma 0.4 puntos y no rompe la racha. El grupo es inclusivo."], ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Esta página tiene inteligencia artificial?", "Sí. Armó el Top 5 de frases, calcula estadísticas raras, y si Emi Costa lo tiene su camino, también armará los equipos."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno, no desde el inicio del grupo. Si debutaste en el partido 10, tu denominador son los partidos desde ese momento. Jugaste (X) y fuiste a ver (O) cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total. La historia no se reescribe.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking de puntos. El núcleo del grupo.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 5 o más partidos consecutivos sin faltar. Intocable.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció. El grupo los recuerda.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez sin jugar. Una vez hincha, siempre hincha. Badge de por vida.<br><br><strong style='color:#86efac'>💰 Financista</strong> — Pagó la cancha al menos una vez. Badge de por vida. El número indica cuántas veces pagó.<br><br><strong style='color:#fde047'>📋 DT</strong> — Arma los equipos. Kuza y Batata. Cargo honorífico y sin sueldo."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."]];
+const FAQ_DATA = [["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking cae, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. Suma 0.4 puntos y no rompe la racha. El grupo es inclusivo."], ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Esta página tiene inteligencia artificial?", "Sí. Armó el Top 5 de frases, calcula estadísticas raras, y si Emi Costa lo tiene su camino, también armará los equipos."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno, no desde el inicio del grupo. Si debutaste en el partido 10, tu denominador son los partidos desde ese momento. Jugaste (X) y fuiste a ver (O) cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 5 o más partidos consecutivos sin faltar.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. Cada vez resta 0.5 puntos.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No suma ni resta, pero mantiene la racha.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. Resta 0.5 puntos del ranking cada vez. El badge 💨 queda en el perfil para siempre con el contador de humadas."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."]];
 
 function renderFAQ(){
   const el=document.getElementById('faq-list');
