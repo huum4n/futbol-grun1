@@ -880,7 +880,9 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="nav-link" onclick="showSection('brunato',this)" style="color:#F59E0B">🏆 Brunato</button>
       <button class="nav-link" onclick="showSection('emisao',this)" style="color:#F59E0B">EMISAO CR7</button>
       <button class="nav-link" onclick="showSection('mundial',this)">🌎 MUNDIAL</button>
+      <button class="nav-link" onclick="showSection('tyc',this)">T&amp;C</button>
       <button class="nav-link" onclick="showSection('admin',this)">Admin</button>
+
     </div>
   </nav>
 
@@ -921,6 +923,8 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <th onclick="sortRanking('pct')">% Asis.</th>
           <th onclick="sortRanking('streak')">Racha</th>
           <th onclick="sortRanking('maxStreak')">Máx. Racha</th>
+          <th onclick="sortRanking('goles')">Goles</th>
+          <th onclick="sortRanking('mvps')">MVP</th>
           <th>Badges</th>
         </tr></thead>
         <tbody id="rank-body"></tbody>
@@ -977,7 +981,28 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     </div>
   </div>
 
-  <div class="section" id="s-admin">
+  <!-- T&C -->
+  <div class="section" id="s-tyc">
+    <div class="section-title">Términos y Condiciones</div>
+    <div class="section-sub">Versión 1.0 · Vigente desde julio de 2025</div>
+    <div class="card" style="font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.9;max-width:720px">
+      <p><strong style="color:var(--white)">1. ACEPTACIÓN DE LOS TÉRMINOS</strong><br>Al acceder y utilizar la plataforma Fútbol Martes 20hs GRUN (en adelante, "la Plataforma"), el usuario acepta en su totalidad los presentes Términos y Condiciones. Si no está de acuerdo con alguno de los términos aquí establecidos, deberá abstenerse de utilizar la Plataforma.</p>
+      <p><strong style="color:var(--white)">2. DESCRIPCIÓN DEL SERVICIO</strong><br>La Plataforma es un sistema privado de estadísticas, rankings y seguimiento de asistencia destinado exclusivamente al grupo de fútbol amateur "GRUN", que se reúne los días martes a las 20 horas en las instalaciones del Colegio Champagnat, Buenos Aires, República Argentina. El acceso está restringido mediante contraseña y no es de carácter público.</p>
+      <p><strong style="color:var(--white)">3. REGISTRO Y ACCESO</strong><br>El acceso requiere una contraseña de uso compartido. El usuario que la comparta con personas ajenas asume plena responsabilidad. La administración se reserva el derecho de modificarla en cualquier momento y sin previo aviso.</p>
+      <p><strong style="color:var(--white)">4. SISTEMA DE PUNTOS Y RANKING</strong><br>El ranking se calcula automáticamente: Jugador (X) +1 punto · Espectador (O) +0.4 puntos · SAF 🚑 0 puntos · Humo 💨 -0.5 puntos. No admite apelaciones, reconsideraciones ni negociaciones de ningún tipo.</p>
+      <p><strong style="color:var(--white)">5. CARGA DE DATOS Y RESPONSABILIDAD</strong><br>La carga de información es responsabilidad exclusiva del administrador. Los datos ingresados se consideran definitivos una vez guardados. La Plataforma no se responsabiliza por datos incorrectos ingresados de buena o mala fe.</p>
+      <p><strong style="color:var(--white)">6. EL HUMO</strong><br>Confirmar y no presentarse genera una penalización automática de 0.5 puntos y queda registrado de forma permanente bajo el badge 💨. La Plataforma no acepta justificaciones, descargos ni recursos de ningún tipo.</p>
+      <p><strong style="color:var(--white)">7. EL SAF — SIN ACTIVIDAD FÍSICA</strong><br>Confirmar, no jugar, pero presentarse a ver el partido. No genera penalización y mantiene la racha activa. El badge 🚑 queda registrado en el perfil.</p>
+      <p><strong style="color:var(--white)">8. BADGES Y RECONOCIMIENTOS</strong><br>Los badges son automáticos y dinámicos, calculados en tiempo real. La administración se reserva el derecho de crearlos, modificarlos o eliminarlos. No constituyen reconocimientos oficiales de ningún organismo deportivo.</p>
+      <p><strong style="color:var(--white)">9. EL PREMIO BRUNATO</strong><br>El galardón máximo de la Plataforma. Sus criterios son confidenciales, subjetivos e inapelables. La decisión del otorgante es final.</p>
+      <p><strong style="color:var(--white)">10. PRIVACIDAD Y PROTECCIÓN DE DATOS</strong><br>La Plataforma almacena únicamente datos de actividad deportiva. No se almacenan datos personales sensibles. Accesibles solo por miembros con contraseña.</p>
+      <p><strong style="color:var(--white)">11. PROPIEDAD INTELECTUAL</strong><br>El diseño, desarrollo y contenido son propiedad de sus creadores. Queda prohibida la reproducción sin autorización expresa. Hecho con Claude por.</p>
+      <p><strong style="color:var(--white)">12. MODIFICACIONES</strong><br>La administración se reserva el derecho de modificar estos Términos en cualquier momento y sin previo aviso. Estadísticamente, ningún usuario los ha leído en su totalidad.</p>
+      <p><strong style="color:var(--white)">13. JURISDICCIÓN</strong><br>Cualquier controversia será resuelta en primera instancia en el vestuario del Colegio Champagnat, con la mediación del DT de turno. En caso de no llegarse a un acuerdo, la decisión final corresponde al administrador.</p>
+    </div>
+  </div>
+
+    <div class="section" id="s-admin">
     <div class="section-title">ADMIN</div>
     <div class="section-sub">Panel de administración</div>
     <div id="admin-lock">
@@ -1351,33 +1376,12 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <div style="margin-bottom:8px">
         <a href="#s-faq" onclick="showSection('faq',document.querySelector('[onclick*=faq]'))" style="color:var(--grey);text-decoration:none;margin:0 10px">FAQ</a>
         <span style="color:var(--border)">·</span>
-        <a href="#" onclick="document.getElementById('modal-tyc').style.display='flex';return false;" style="color:var(--grey);text-decoration:none;margin:0 10px">Términos y Condiciones</a>
+        <a href="#" onclick="showSection('tyc',null);return false;" style="color:var(--grey);text-decoration:none;margin:0 10px">Términos y Condiciones</a>
       </div>
       <div>🌎 Fútbol Martes 20hs GRUN · Colegio Champagnat, Buenos Aires · Desde julio 2025</div>
       <div style="margin-top:4px;font-size:11px;opacity:0.6">Hecho con Claude por</div>
     </div>
   </footer>
-
-  <!-- MODAL T&C -->
-  <div id="modal-tyc" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;justify-content:center;align-items:center;padding:20px;box-sizing:border-box" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:var(--bg-card);border-radius:14px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:28px;border:1px solid var(--border)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white)">Términos y Condiciones</div>
-        <button onclick="document.getElementById('modal-tyc').style.display='none'" style="background:none;border:none;color:var(--grey);font-size:20px;cursor:pointer">✕</button>
-      </div>
-      <div style="font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.8">
-        <div style="color:var(--grey);font-size:11px;margin-bottom:16px">Versión 1.0 · Vigente desde julio 2025</div>
-        <p><strong style="color:var(--white)">1. Participación</strong><br>Al aparecer en esta web, el jugador acepta que sus estadísticas, rachas, ausencias y humadas sean de dominio público para el grupo.</p>
-        <p><strong style="color:var(--white)">2. El Humo</strong><br>Confirmar y no aparecer resta 0.5 puntos. No hay apelación. No hay excusa válida. Ni el tráfico, ni el trabajo, ni "se me olvidó".</p>
-        <p><strong style="color:var(--white)">3. El SAF</strong><br>Si confirmaste y no podés jugar pero aparecés igual, el grupo reconoce tu esfuerzo con 0 puntos y una ambulancia en tu perfil.</p>
-        <p><strong style="color:var(--white)">4. Los datos</strong><br>Los datos son los datos. Si el admin cargó mal algo, se puede corregir. Si cargó bien y no te gusta, no se puede corregir.</p>
-        <p><strong style="color:var(--white)">5. El Premio Brunato</strong><br>Los criterios son secretos, subjetivos e inapelables. Nadie sabe exactamente cómo se gana.</p>
-        <p><strong style="color:var(--white)">6. El Ranking</strong><br>El ranking es la verdad absoluta. No se discute en la cancha, no se discute en el grupo de WhatsApp.</p>
-        <p><strong style="color:var(--white)">7. Privacidad</strong><br>Esta web tiene contraseña. Si alguien que no es del grupo la conoce, es problema del que la compartió.</p>
-        <p><strong style="color:var(--white)">8. Modificaciones</strong><br>Estos términos pueden cambiar en cualquier momento sin previo aviso. Nadie los va a leer de todas formas.</p>
-      </div>
-    </div>
-  </div>
 
 </div>
 
@@ -1772,9 +1776,15 @@ function renderInicio(stats,sorted,ranking){
 let rankData=[];
 let rankSort={col:'pos',dir:1};
 function renderRanking(stats,ranking){
+  const goalMap={};const mvpMap={};
+  DB.matches.forEach(function(m){
+    Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)goalMap[e[0]]=(goalMap[e[0]]||0)+e[1];});
+    if(m.mvp)mvpMap[m.mvp]=(mvpMap[m.mvp]||0)+1;
+  });
   rankData=ranking.map(([name,s],i)=>({
     pos:i+1,name,pts:s.pts,played:s.played,watched:s.watched,
     pct:s.pct,streak:s.curS,maxStreak:s.maxS,
+    goles:goalMap[name]||0,mvps:mvpMap[name]||0,
     badges:getBadges(name,stats,i+1)
   }));
   drawRankTable(rankData);
@@ -1790,6 +1800,8 @@ function drawRankTable(data){
       <td>${r.pct}%</td>
       <td><span class="sc ${r.streak>0?'on':'off'}">${r.streak>0?'+'+r.streak:'—'}</span></td>
       <td><span class="sc on">${r.maxStreak}</span></td>
+      <td>${r.goles>0?'⚽ '+r.goles:'—'}</td>
+      <td>${r.mvps>0?'🌟 '+r.mvps:'—'}</td>
       <td><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
     </tr>`).join('');
 }
@@ -1885,6 +1897,8 @@ function openModal(name){
     if(h==='b')return`<div class="hm before" title="${tip}"></div>`;
     if(h==='X')return`<div class="hm played" title="${tip} ✓"></div>`;
     if(h==='O')return`<div class="hm watched" title="${tip} 👁️"></div>`;
+    if(h==='SAF')return`<div class="hm" style="background:rgba(239,68,68,0.35)" title="${tip} 🚑"></div>`;
+    if(h==='H')return`<div class="hm" style="background:rgba(148,163,184,0.2)" title="${tip} 💨"></div>`;
     return`<div class="hm absent" title="${tip} ✗"></div>`;
   }).join('');
   document.getElementById('modal-content').innerHTML=`
@@ -1922,6 +1936,83 @@ function openModal(name){
       return`<div class="card-title" style="margin-top:20px;color:#F59E0B">🏆 Premios Brunato</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${lines.join('')}</div>`;
     })()}
     ${(()=>{const pf=DB.frases.filter(f=>f.nick===name);return pf.length?`<div class="card-title" style="margin-top:20px">💬 Sus frases icónicas</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${pf.map(f=>`<div style="border-left:2px solid var(--teal);padding:8px 12px;background:rgba(20,184,166,0.05);border-radius:0 6px 6px 0"><div style="font-style:italic;font-size:13px;color:var(--text)">"${f.text}"</div><div style="font-size:11px;color:var(--grey);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${f.date||''}</div></div>`).join('')}</div>`:''})()}
+    ${(()=>{
+      // ── VISUAL ──────────────────────────────────────────────────────────
+      const matchesWithTeams=DB.matches.filter(m=>m.teams&&m.teams.blanco&&m.teams.blanco.length>0);
+      let blancos=0,negros=0;
+      const socios={};const rivales={};
+      matchesWithTeams.forEach(function(m){
+        const inBlanco=m.teams.blanco.includes(name);
+        const inNegro=m.teams.negro.includes(name);
+        if(!inBlanco&&!inNegro)return;
+        if(inBlanco)blancos++;
+        if(inNegro)negros++;
+        const myTeam=inBlanco?m.teams.blanco:m.teams.negro;
+        const otherTeam=inBlanco?m.teams.negro:m.teams.blanco;
+        myTeam.forEach(function(p){if(p!==name)socios[p]=(socios[p]||0)+1;});
+        otherTeam.forEach(function(p){rivales[p]=(rivales[p]||0)+1;});
+      });
+      const topSocio=Object.entries(socios).sort((a,b)=>b[1]-a[1])[0];
+      const topRival=Object.entries(rivales).sort((a,b)=>b[1]-a[1])[0];
+      const favColor=blancos>negros?'⚪ Blanco':negros>blancos?'⚫ Negro':'⚪⚫ Neutro';
+      const favDetail=blancos>negros?blancos+'B / '+negros+'N':negros>blancos?negros+'N / '+blancos+'B':blancos+'B / '+negros+'N';
+
+      // ── HISTORIA ─────────────────────────────────────────────────────────
+      const allAppearances=DB.matches.filter(function(m){
+        return m.attendance[name]||( m.humo&&m.humo.includes(name))||(m.saf&&m.saf.includes(name));
+      }).sort((a,b)=>a.date.localeCompare(b.date));
+      const lastMatch=allAppearances.length?allAppearances[allAppearances.length-1]:null;
+      const lastStr=lastMatch?new Date(lastMatch.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—';
+      const goalTotals={};DB.matches.forEach(function(m){Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)goalTotals[e[0]]=(goalTotals[e[0]]||0)+e[1];});});
+      const myGoals=goalTotals[name]||0;
+      const myMVPs=DB.matches.filter(m=>m.mvp===name);
+      const partRec=DB.matches.filter(m=>(m.mvp===name)||(m.goals&&m.goals[name]>0)).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+
+      const visualHTML=(blancos+negros>0)?`<div class="card-title" style="margin-top:20px">🎨 Visual</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px">${blancos>negros?'⚪':negros>blancos?'⚫':'⚪⚫'}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--white);margin-top:4px">${favColor}</div>
+            <div style="font-size:10px;color:var(--grey)">${favDetail}</div>
+          </div>
+          ${topSocio?`<div style="background:rgba(20,184,166,0.08);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px">🤝</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--teal);margin-top:4px">${topSocio[0]}</div>
+            <div style="font-size:10px;color:var(--grey)">Socio • ${topSocio[1]}x</div>
+          </div>`:''}
+          ${topRival?`<div style="background:rgba(239,68,68,0.08);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px">⚔️</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#f87171;margin-top:4px">${topRival[0]}</div>
+            <div style="font-size:10px;color:var(--grey)">Rival • ${topRival[1]}x</div>
+          </div>`:''}
+        </div>`:'';
+
+      const historiaHTML=`<div class="card-title" style="margin-top:20px">📅 Historia</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:var(--grey);letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-weight:700">PRIMER PARTIDO</div>
+            <div style="font-size:13px;color:var(--white);margin-top:4px">${debutStr}</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">
+            <div style="font-size:10px;color:var(--grey);letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-weight:700">ÚLTIMO PARTIDO</div>
+            <div style="font-size:13px;color:var(--white);margin-top:4px">${lastStr}</div>
+          </div>
+        </div>
+        ${partRec.length?`<div style="margin-top:8px">
+          <div style="font-size:10px;color:var(--grey);letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-weight:700;margin-bottom:6px">PARTIDOS DESTACADOS</div>
+          ${partRec.map(m=>{
+            const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+            const isMVP=m.mvp===name;
+            const goles=m.goals&&m.goals[name]?m.goals[name]:0;
+            return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
+              <div style="font-size:12px;color:var(--white);font-family:'Barlow Condensed',sans-serif">${ds}</div>
+              <div style="display:flex;gap:6px">${isMVP?'<span style="font-size:11px;color:#F59E0B">⭐ MVP</span>':''}${goles>0?`<span style="font-size:11px;color:var(--teal)">⚽ ${goles} gol${goles>1?'es':''}</span>`:''}</div>
+            </div>`;
+          }).join('')}
+        </div>`:''}`;
+
+      return visualHTML+historiaHTML;
+    })()}
     `;
   document.getElementById('player-modal').classList.add('open');
   document.body.style.overflow='hidden';
