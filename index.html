@@ -1555,7 +1555,7 @@ function getBadges(name,stats,rank){
   // Fantasma
   if(s.played+s.watched<=2) b.push({cls:'fantasma',lbl:'Fantasma'});
   // Hincha
-  if(s.watched>0) b.push({cls:'hincha',lbl:'Hincha'});
+  if(s.watched>0||s.safCount>0) b.push({cls:'hincha',lbl:'Hincha'});
   if(name==='Kuza'||name==='Batata') b.unshift({cls:'badge-dt',lbl:'📋 DT'});
   // Financista
   const FIN_STATIC={Batata:10,Gonza:6,Manolo:5,Nico:4,Tony:3,Paco:2,Hueso:1,Emi:1};
