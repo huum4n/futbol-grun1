@@ -259,7 +259,7 @@ tbody td{padding:10px 14px;font-size:14px;color:var(--text)}
 .rk-pos.g2{color:#93C5FD}
 .rk-pos.g3{color:#7DD3FC}
 .rk-name{font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.5px}
-.rk-pts{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal)}
+.bebas{font-family:"Bebas Neue",sans-serif}.barcond{font-family:"Barlow Condensed",sans-serif}.rk-pts{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--teal)}
 .sc{font-size:11px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:1px}
 .sc.on{background:rgba(34,197,94,0.16);color:#86EFAC}
 .sc.off{background:rgba(148,163,184,0.1);color:var(--grey)}
@@ -924,7 +924,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <th onclick="sortRanking('streak')">Racha</th>
           <th onclick="sortRanking('maxStreak')">Máx. Racha</th>
           <th onclick="sortRanking('goles')">Goles</th>
-          <th onclick="sortRanking('mvps')">MVP</th>
+          <th onclick="sortRanking('mvps')">Brunato</th>
           <th>Badges</th>
         </tr></thead>
         <tbody id="rank-body"></tbody>
@@ -1041,9 +1041,13 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
             </select>
           </div>
           <div class="form-group">
-            <label class="flabel">MVP (opcional)</label>
-            <input type="text" class="finput" id="np-mvp" placeholder="Nombre del MVP..." list="pl-dl">
+            <label class="flabel">Brunato del partido (opcional)</label>
+            <input type="text" class="finput" id="np-mvp" placeholder="Nombre del Brunato del partido..." list="pl-dl" oninput="updateMVPFrase()">
             <datalist id="pl-dl"></datalist>
+          </div>
+          <div class="form-group" id="np-frase-group" style="display:none">
+            <label class="flabel">Frase o dedicatoria del Brunato</label>
+            <input type="text" class="finput" id="np-mvp-frase" placeholder="Su frase de la noche...">
           </div>
           <div class="form-group">
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
@@ -1089,9 +1093,13 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
               </select>
             </div>
             <div class="form-group">
-              <label class="flabel">MVP</label>
-              <input type="text" class="finput" id="edit-mvp" placeholder="MVP..." list="pl-dl">
+              <label class="flabel">Brunato del partido</label>
+              <input type="text" class="finput" id="edit-mvp" placeholder="Nombre del Brunato..." list="pl-dl" oninput="updateEditMVPFrase()">
             </div>
+          </div>
+          <div class="form-group" id="edit-frase-group">
+            <label class="flabel">Frase o dedicatoria del Brunato</label>
+            <input type="text" class="finput" id="edit-mvp-frase" placeholder="Su frase de la noche...">
           </div>
           <div class="form-group">
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
@@ -1272,6 +1280,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="atab active" onclick="statsTab('mes',this)">📅 Por mes</button>
       <button class="atab" onclick="statsTab('evolucion',this)">📈 Evolución</button>
       <button class="atab" onclick="statsTab('raras',this)">🎲 Stats raras</button>
+      <button class="atab" onclick="statsTab('heatmap',this)">🗓️ Mapa asistencia</button>
     </div>
 
     <!-- POR MES -->
@@ -1297,6 +1306,11 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       </div>
     </div>
 
+    <!-- HEATMAP -->
+    <div id="stats-heatmap" class="apanel">
+      <div id="heatmap-content" style="overflow-x:auto"></div>
+    </div>
+
     <!-- STATS RARAS -->
     <div id="stats-raras" class="apanel">
       <div id="raras-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
@@ -1305,6 +1319,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 
   <!-- BRUNATO -->
   <div class="section" id="s-brunato">
+    <!-- Hero -->
     <div style="background:linear-gradient(135deg,#1C0A00 0%,#78350F 50%,#1C0A00 100%);border:1px solid #F59E0B;border-radius:14px;padding:40px 32px;text-align:center;margin-bottom:24px;position:relative;overflow:hidden">
       <div style="position:absolute;right:-10px;top:-20px;font-family:'Bebas Neue',sans-serif;font-size:160px;color:rgba(245,158,11,0.05);line-height:1;pointer-events:none">B</div>
       <div style="font-size:48px;margin-bottom:8px;position:relative;z-index:1">🏆</div>
@@ -1312,24 +1327,40 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:5px;text-transform:uppercase;color:var(--white);margin-top:8px;position:relative;z-index:1">El galardón más codiciado del fútbol martes</div>
       <div style="font-family:'Barlow',sans-serif;font-style:italic;font-size:14px;color:#FCD34D;margin-top:14px;position:relative;z-index:1">"Una que te mire como EMISAO CR7 al Brunato"</div>
     </div>
-    <div id="brunato-awards"></div>
+
+    <!-- Ranking histórico -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title" style="color:#F59E0B">🏆 Ranking Histórico de Brunatos</div>
+      <div id="brunato-ranking" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Brunato de ORO -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title" style="color:#F59E0B">🏆 Brunato de ORO</div>
+      <div id="brunato-oro-list" style="margin-top:12px"></div>
+    </div>
+
+    <!-- Brunato de la Fecha -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title" style="color:#F59E0B">🎖️ Brunato de la Fecha</div>
+      <div id="brunato-partidos-list" style="margin-top:12px"></div>
+      <div class="empty" id="brunato-partidos-empty" style="display:none">Los Brunatos de la Fecha se cargan al agregar o editar desde Admin</div>
+    </div>
+
+    <!-- Fotos -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-title" style="color:#F59E0B">📸 Fotos</div>
       <div class="photos-grid" id="brunato-photos-grid"></div>
       <div class="empty" id="brunato-photos-empty" style="display:none">Sin fotos aún</div>
     </div>
+
+    <!-- Videos -->
     <div class="card" style="margin-bottom:20px">
       <div class="card-title" style="color:#F59E0B">🎥 Videos</div>
       <div id="brunato-videos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px"></div>
       <div class="empty" id="brunato-videos-empty" style="display:none">Sin videos aún</div>
     </div>
-    <div id="brunato-partidos-section" style="margin-top:24px">
-      <div class="card-title" style="color:#F59E0B;margin-bottom:14px">🎖️ Brunato del Partido</div>
-      <div id="brunato-partidos-list"></div>
-      <div class="empty" id="brunato-partidos-empty">Los MVPs se cargan al agregar o editar un partido desde Admin</div>
-    </div>
   </div>
-
   <!-- EQUIPOS -->
   <div class="section" id="s-equipos">
     <div class="section-title">⚽ Equipos</div>
@@ -1429,7 +1460,7 @@ async function loadDB(){
   DB.matches=matches.map(m=>({_id:m.id,date:m.date,n:m.n,type:m.type,
     attendance:m.attendance||{},mvp:m.mvp,goals:m.goals||{},created_at:m.created_at,
     teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null,
-    humo:m.humo||[],saf:m.saf||[]}));
+    humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
   DB.frases=frases.map(f=>({_id:f.id,text:f.text,author:f.author,date:f.date_str,nick:f.nick,created_at:f.created_at}));
@@ -1651,7 +1682,7 @@ function runHealthCheck(){
   const mvpCounts={};
   DB.matches.forEach(function(m){if(m.mvp)mvpCounts[m.mvp]=(mvpCounts[m.mvp]||0)+1;});
   const mvpList=Object.entries(mvpCounts).sort(function(a,b){return b[1]-a[1];}).slice(0,3).map(function(e){return e[0]+' ('+e[1]+'x)';}).join(', ');
-  checks.push(Object.keys(mvpCounts).length>0?ok('MVPs registrados: '+mvpList):warn('Ningún MVP cargado'));
+  checks.push(Object.keys(mvpCounts).length>0?ok('Brunatos del partido: '+mvpList):warn('Ningún Brunato del partido cargado'));
 
   // Goals
   const goalTotals={};
@@ -1676,6 +1707,52 @@ function runHealthCheck(){
   checks.push(ok('Top 3: '+top3));
 
   el.innerHTML='<div style="font-size:11px;color:var(--grey);margin-bottom:8px">Verificación: '+new Date().toLocaleTimeString('es-AR')+'</div>'+checks.join('');
+}
+
+
+function renderHeatmap(){
+  var el=document.getElementById('heatmap-content');
+  if(!el)return;
+  var r2=getStats();var stats=r2.stats;
+  var ranking=getRanking(stats);
+  var sorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
+  var players=ranking.slice(0,20).map(e=>e[0]);
+  var COL=22,ROW=20,NW=110;
+  var hdr=sorted.map(m=>{
+    var d=new Date(m.date+'T12:00:00');
+    return`<div style="width:${COL}px;min-width:${COL}px;text-align:center;font-size:9px;color:#64748b;transform:rotate(-45deg);transform-origin:bottom left;height:34px;white-space:nowrap;padding-top:18px">${d.getMonth()+1}/${d.getDate()}</div>`;
+  }).join('');
+  var rowsHtml=players.map(name=>{
+    var pid=name.replace(/[^a-z0-9]/gi,'_');
+    var cells=sorted.map(m=>{
+      var v=m.attendance[name];
+      var isH=m.humo&&m.humo.includes(name);
+      var isS=m.saf&&m.saf.includes(name);
+      var bg=isH?'rgba(148,163,184,0.3)':isS?'rgba(239,68,68,0.35)':v==='X'?'rgba(29,78,216,0.75)':v==='O'?'rgba(20,184,166,0.55)':'rgba(255,255,255,0.04)';
+      var tip=isH?'Humo':isS?'SAF':v==='X'?'Jugó':v==='O'?'Fue a ver':'Ausente';
+      return`<div title="${m.date} ${tip}" style="width:${COL}px;min-width:${COL}px;height:${ROW}px;background:${bg};border-radius:2px"></div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;gap:2px;margin-bottom:2px">
+      <div style="width:${NW}px;min-width:${NW}px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px" onclick="openModal('${pid.replace(/_/g,' ')}')" data-name="${name}" id="hm-${pid}">${name}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+  var leg=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:#94a3b8">
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(29,78,216,0.75);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Jugó</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(20,184,166,0.55);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Fue a ver</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.35);border-radius:2px;vertical-align:middle;margin-right:3px"></span>SAF</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(148,163,184,0.3);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Humo</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(255,255,255,0.04);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Ausente</span>
+  </div>`;
+  el.innerHTML=leg+`<div style="overflow-x:auto"><div style="min-width:fit-content">
+    <div style="display:flex;align-items:flex-end;gap:2px;margin-bottom:4px;padding-left:${NW}px">${hdr}</div>
+    ${rowsHtml}
+  </div></div>`;
+  // Fix onclick - replace pid back to name
+  el.querySelectorAll('[data-name]').forEach(function(d){
+    var n=d.getAttribute('data-name');
+    d.onclick=function(){openModal(n);};
+  });
 }
 
 // INIT
@@ -1801,7 +1878,7 @@ function drawRankTable(data){
       <td><span class="sc ${r.streak>0?'on':'off'}">${r.streak>0?'+'+r.streak:'—'}</span></td>
       <td><span class="sc on">${r.maxStreak}</span></td>
       <td>${r.goles>0?'⚽ '+r.goles:'—'}</td>
-      <td>${r.mvps>0?'🌟 '+r.mvps:'—'}</td>
+      <td>${r.mvps>0?'🏆 '+r.mvps:'—'}</td>
       <td><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
     </tr>`).join('');
 }
@@ -1829,7 +1906,7 @@ function renderPartidos(sorted){
       <div class="partido-header">
         <div class="partido-date">${ds}</div>
         <span class="tipo-tag">${tipoStr} · ${m.n} jugadores</span>
-        ${m.mvp?`<div class="partido-mvp">⭐ ${m.mvp}</div>`:''}
+        ${m.mvp?`<div class="partido-mvp">🏆 ${m.mvp}</div>`:''}
       </div>
       <div class="partido-body" id="pb-${idx}">
         ${(()=>{const bl=m.teams&&m.teams.blanco&&m.teams.blanco.length?m.teams.blanco:null;const ng=m.teams&&m.teams.negro&&m.teams.negro.length?m.teams.negro:null;
@@ -1932,7 +2009,7 @@ function openModal(name){
       if(!mAwards.length&&!mMVPs.length)return'';
       const lines=[];
       mAwards.forEach(a=>lines.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)"><span style="font-size:18px">🏆</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#F59E0B;letter-spacing:1px">${a.title}</div><div style="font-size:12px;font-style:italic;color:#FCD34D">${a.reason||''}</div></div></div>`));
-      if(mMVPs.length)lines.push(`<div style="padding:8px 12px;border-radius:7px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#F59E0B;margin-bottom:4px">🎖️ BRUNATOS DEL PARTIDO (${mMVPs.length})</div>${mMVPs.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>{const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});return`<div style="font-size:12px;color:#FCD34D;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🏆 ${ds}</div>`;}).join('')}</div>`);
+      if(mMVPs.length)lines.push(`<div style="padding:8px 12px;border-radius:7px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#F59E0B;margin-bottom:4px">🎖️ BRUNATOS DE LA FECHA (${mMVPs.length})</div>${mMVPs.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>{const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});return`<div style="font-size:12px;color:#FCD34D;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🏆 ${ds}</div>`;}).join('')}</div>`);
       return`<div class="card-title" style="margin-top:20px;color:#F59E0B">🏆 Premios Brunato</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${lines.join('')}</div>`;
     })()}
     ${(()=>{const pf=DB.frases.filter(f=>f.nick===name);return pf.length?`<div class="card-title" style="margin-top:20px">💬 Sus frases icónicas</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${pf.map(f=>`<div style="border-left:2px solid var(--teal);padding:8px 12px;background:rgba(20,184,166,0.05);border-radius:0 6px 6px 0"><div style="font-style:italic;font-size:13px;color:var(--text)">"${f.text}"</div><div style="font-size:11px;color:var(--grey);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${f.date||''}</div></div>`).join('')}</div>`:''})()}
@@ -2006,7 +2083,7 @@ function openModal(name){
             const goles=m.goals&&m.goals[name]?m.goals[name]:0;
             return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">
               <div style="font-size:12px;color:var(--white);font-family:'Barlow Condensed',sans-serif">${ds}</div>
-              <div style="display:flex;gap:6px">${isMVP?'<span style="font-size:11px;color:#F59E0B">⭐ MVP</span>':''}${goles>0?`<span style="font-size:11px;color:var(--teal)">⚽ ${goles} gol${goles>1?'es':''}</span>`:''}</div>
+              <div style="display:flex;gap:6px">${isMVP?'<span style="font-size:11px;color:#F59E0B">🏆 Brunato</span>':''}${goles>0?`<span style="font-size:11px;color:var(--teal)">⚽ ${goles} gol${goles>1?'es':''}</span>`:''}</div>
             </div>`;
           }).join('')}
         </div>`:''}`;
@@ -2154,6 +2231,18 @@ function togglePS(name,prefix){
   if(prefix==='eps') updateGoalsList('edit-goals-list',epsState);
 }
 
+function updateEditMVPFrase(){
+  var fraseGroup=document.getElementById('edit-frase-group');
+  var mvpVal=document.getElementById('edit-mvp');
+  if(fraseGroup&&mvpVal){fraseGroup.style.display=mvpVal.value.trim()?'block':'none';}
+}
+function updateMVPFrase(){
+  var mvpVal=document.getElementById('np-mvp');
+  var fraseGroup=document.getElementById('np-frase-group');
+  if(mvpVal&&fraseGroup){
+    fraseGroup.style.display=mvpVal.value.trim()?'block':'none';
+  }
+}
 function updatePSCount(cxId,coId,ctId,state){
   const x=Object.values(state).filter(v=>v==='B'||v==='N').length;
   const o=Object.values(state).filter(v=>v==='O').length;
@@ -2225,6 +2314,7 @@ async function saveNewMatch(){
   if(xCount===0){showToast('Seleccioná al menos un jugador','err');return;}
   const type=document.getElementById('np-type').value;
   const mvp=document.getElementById('np-mvp').value.trim()||null;
+  const mvp_frase=document.getElementById('np-mvp-frase')?document.getElementById('np-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('np-financista').value.trim()||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
@@ -2239,8 +2329,8 @@ async function saveNewMatch(){
   const goals=getGoalsFromUI(psState);
   showToast('Guardando...','');
   try{
-    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,goals,teams:teams_data,financista,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
-    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,goals,teams:teams_data,financista,humo:humo_list,saf:saf_list});
+    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
+    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:humo_list,saf:saf_list});
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();
     renderAdminMatchList();
@@ -2261,7 +2351,7 @@ function renderAdminMatchList(){
       <div class="ami-date">${ds}</div>
       <span class="tipo-tag">${m.type==='futbol11'?'F11':'F8'}</span>
       <div class="ami-n">${x} jugaron${o?` · ${o} vieron`:''}</div>
-      ${m.mvp?`<div class="ami-mvp">⭐ ${m.mvp}</div>`:''}
+      ${m.mvp?`<div class="ami-mvp">🏆 ${m.mvp}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -2272,6 +2362,9 @@ function openEditMatch(idx){
   document.getElementById('edit-date').value=m.date;
   document.getElementById('edit-type').value=m.type;
   document.getElementById('edit-mvp').value=m.mvp||'';
+  document.getElementById('edit-mvp-frase').value=m.mvp_frase||'';
+  var efg=document.getElementById('edit-frase-group');
+  if(efg)efg.style.display=m.mvp?'block':'none';
   document.getElementById('edit-financista').value=m.financista||'';
   epsState={};
   const mTeams=m.teams||{blanco:[],negro:[]};
@@ -2306,6 +2399,7 @@ async function saveEditMatch(){
   if(x===0){showToast('Seleccioná al menos un jugador','err');return;}
   const type=document.getElementById('edit-type').value;
   const mvp=document.getElementById('edit-mvp').value.trim()||null;
+  const mvp_frase=document.getElementById('edit-mvp-frase')?document.getElementById('edit-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('edit-financista').value.trim()||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
@@ -2320,8 +2414,8 @@ async function saveEditMatch(){
   const goals=getGoalsFromUI(epsState);
   const matchId=DB.matches[idx]._id;
   try{
-    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,goals,teams:teams_data,financista,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
-    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,goals,teams:teams_data,financista,humo:e_humo,saf:e_saf};
+    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
+    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:e_humo,saf:e_saf};
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();renderAdminMatchList();backToList();
     showToast('Partido actualizado ✓');
@@ -2548,7 +2642,7 @@ function renderEMISAO(){
     <div style="color:#F59E0B;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;margin-bottom:10px">📅 ASISTENCIA POR MES</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">${monthBars}</div>
     ${mvpMatches2.length?`<div style="margin-top:16px">
-      <div style="color:#F59E0B;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;margin-bottom:8px">🏆 BRUNATOS DEL PARTIDO</div>
+      <div style="color:#F59E0B;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:3px;margin-bottom:8px">🏆 BRUNATOS DE LA FECHA</div>
       <div style="display:flex;flex-direction:column;gap:5px">${mvpMatches2.map(m=>{
         const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
         return`<div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#FCD34D;letter-spacing:1px">🏆 ${ds}</div>`;
@@ -2652,6 +2746,7 @@ function statsTab(id, btn){
   document.getElementById('stats-'+id).classList.add('active');
   if(id==='evolucion' && !evoChart){try{renderEvolucion();}catch(e){console.error('renderEvolucion:',e);}}
   if(id==='raras'){try{renderWeirdStats();}catch(e){console.error('renderWeirdStats:',e);document.getElementById('raras-grid').innerHTML='<div class="empty">Error: '+e.message+'</div>';}}
+  if(id==='heatmap'){try{renderHeatmap();}catch(e){console.error('renderHeatmap:',e);}}
 }
 
 // ══════════════════════════════════════════
@@ -2685,48 +2780,84 @@ function showMonth(key, btn){
   if(btn) btn.classList.add('active');
   const sorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
   const monthMatches=sorted.filter(m=>m.date.startsWith(key));
-  const pts={};
-  monthMatches.forEach(m=>{
-    Object.entries(m.attendance).forEach(([p,v])=>{
-      if(!pts[p])pts[p]={played:0,watched:0,pts:0};
-      if(v==='X'){pts[p].played++;pts[p].pts+=1;}
-      else if(v==='O'){pts[p].watched++;pts[p].pts+=0.4;}
+  const mStats={};
+
+  monthMatches.forEach(function(m){
+    Object.entries(m.attendance).forEach(function(e){
+      var p=e[0],v=e[1];
+      if(!mStats[p])mStats[p]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
+      if(v==='X'){mStats[p].played++;mStats[p].pts+=1;}
+      else if(v==='O'){
+        if(m.saf&&m.saf.includes(p)){mStats[p].saf++;}
+        else{mStats[p].watched++;}
+        mStats[p].pts+=0.4;
+      }
     });
+    (m.humo||[]).forEach(function(p){
+      if(!mStats[p])mStats[p]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
+      mStats[p].humo++;mStats[p].pts-=0.5;
+    });
+    Object.entries(m.goals||{}).forEach(function(e){
+      if(e[1]>0){
+        if(!mStats[e[0]])mStats[e[0]]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
+        mStats[e[0]].goles+=e[1];
+      }
+    });
+    if(m.mvp){
+      if(!mStats[m.mvp])mStats[m.mvp]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
+      mStats[m.mvp].mvps++;
+    }
   });
-  const rank=Object.entries(pts).filter(([,v])=>v.pts>0).sort((a,b)=>b[1].pts-a[1].pts);
-  const [y,m]=key.split('-');
-  const mNames={'01':'Enero','02':'Febrero','03':'Marzo','04':'Abril','05':'Mayo','06':'Junio','07':'Julio','08':'Agosto','09':'Septiembre','10':'Octubre','11':'Noviembre','12':'Diciembre'};
+
+  const rank=Object.entries(mStats).filter(function(e){
+    var v=e[1];return v.played>0||v.watched>0||v.saf>0||v.humo>0;
+  }).sort(function(a,b){return b[1].pts-a[1].pts;});
+
+  const [y,mn]=key.split('-');
+  const mNames={'01':'Enero','02':'Febrero','03':'Marzo','04':'Abril','05':'Mayo','06':'Junio',
+    '07':'Julio','08':'Agosto','09':'Septiembre','10':'Octubre','11':'Noviembre','12':'Diciembre'};
   const content=document.getElementById('month-content');
-  if(!rank.length){content.innerHTML=`<div class="empty">Sin partidos en ${mNames[m]} ${y}</div>`;return;}
+  if(!rank.length){content.innerHTML='<div class="empty">Sin partidos en '+mNames[mn]+' '+y+'</div>';return;}
 
   const top3=rank.slice(0,3);
   const ord=[top3[1],top3[0],top3[2]];
   const cls=['p2','p1','p3'];
   const med=['🥈','🥇','🥉'];
-  const podiumHtml=`<div class="podium" style="margin-bottom:20px">${ord.map((it,i)=>it?`
-    <div class="podium-item" onclick="openModal('${it[0]}')">
-      <div class="podium-medal">${med[i]}</div>
-      <div class="podium-bar ${cls[i]}" style="height:${[80,100,65][i]}px">${it[1].pts.toFixed(1)}</div>
-      <div class="podium-name">${it[0]}</div>
-      <div class="podium-pts">${it[1].played} jugados · ${monthMatches.length} partidos</div>
-    </div>`:'' ).join('')}</div>`;
+  const podiumHtml='<div class="podium" style="margin-bottom:20px">'+ord.map(function(it,i){
+    return it?'<div class="podium-item" onclick="openModal(&quot;'+it[0]+'&quot;)">'
+      +'<div class="podium-medal">'+med[i]+'</div>'
+      +'<div class="podium-bar '+cls[i]+'" style="height:'+[80,100,65][i]+'px">'+it[1].pts.toFixed(1)+'</div>'
+      +'<div class="podium-name">'+it[0]+'</div>'
+      +'<div class="podium-pts">'+it[1].played+' jugados · '+monthMatches.length+' partidos</div>'
+      +'</div>':'';
+  }).join('')+'</div>';
 
-  content.innerHTML=`
-    <div class="card">
-      <div class="card-title">${mNames[m]} ${y} · ${monthMatches.length} partido${monthMatches.length!==1?'s':''}</div>
-      ${podiumHtml}
-      <table style="width:100%">
-        <thead><tr><th>#</th><th>Jugador</th><th>Pts</th><th>Jugó</th><th>Vio</th></tr></thead>
-        <tbody>${rank.map(([n,v],i)=>`<tr onclick="openModal('${n}')">
-          <td class="rk-pos ${i===0?'g1':i===1?'g2':i===2?'g3':''}">${i+1}</td>
-          <td class="rk-name">${n}</td>
-          <td class="rk-pts">${v.pts.toFixed(1)}</td>
-          <td>${v.played}</td>
-          <td>${v.watched||''}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>`;
+  const rows=rank.map(function(e,i){
+    var n=e[0],v=e[1];
+    var presencia=[
+      v.watched?'👁️'+v.watched:'',
+      v.saf?'🚑'+v.saf:'',
+      v.humo?'💨'+v.humo:''
+    ].filter(Boolean).join(' ');
+    return '<tr onclick="openModal(&quot;'+n+'&quot;)">'
+      +'<td class="rk-pos '+(i===0?'g1':i===1?'g2':i===2?'g3':'')+'">'+(i+1)+'</td>'
+      +'<td class="rk-name">'+n+'</td>'
+      +'<td class="rk-pts">'+v.pts.toFixed(1)+'</td>'
+      +'<td>'+v.played+'</td>'
+      +'<td>'+(v.goles||'—')+'</td>'
+      +'<td>'+(v.mvps?'🏆×'+v.mvps:'—')+'</td>'
+      +'<td style="font-size:12px">'+(presencia||'—')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  content.innerHTML='<div class="card">'
+    +'<div class="card-title">'+mNames[mn]+' '+y+' · '+monthMatches.length+' partido'+(monthMatches.length!==1?'s':'')+'</div>'
+    +podiumHtml
+    +'<table style="width:100%"><thead><tr>'
+    +'<th>#</th><th>Jugador</th><th>Pts</th><th>Jugó</th><th>Goles</th><th>Brunato</th><th>👁️🚑💨</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
+
 
 // ══════════════════════════════════════════
 // EVOLUCIÓN DEL RANKING
@@ -2735,7 +2866,7 @@ function renderEvolucion(){
   const sorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
   const {stats}=getStats();
   const ranking=getRanking(stats);
-  const top8=ranking.slice(0,8).map(([n])=>n);
+  const top16=ranking.slice(0,16).map(([n])=>n);
 
   // Calculate cumulative points and position at each match
   const labels=sorted.map(m=>{
@@ -2743,14 +2874,15 @@ function renderEvolucion(){
     return `${d.getDate()}/${d.getMonth()+1}`;
   });
 
-  const colors=['#14B8A6','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#22C55E','#F97316','#EC4899'];
+  const colors=['#14B8A6','#3B82F6','#F59E0B','#EF4444','#8B5CF6','#22C55E','#F97316','#EC4899',
+                '#06B6D4','#A78BFA','#FCD34D','#FB7185','#34D399','#FBBF24','#60A5FA','#E879F9'];
 
-  const datasets=top8.map((player,ci)=>{
+  const datasets=top16.map((player,ci)=>{
     const data=sorted.map((m,idx)=>{
       const matchesSoFar=sorted.slice(0,idx+1);
       const playerPts={};
-      // calc points for all top8 up to this match
-      top8.forEach(p=>{
+      // calc points for all top16 up to this match
+      top16.forEach(p=>{
         let pts=0;
         matchesSoFar.forEach(mm=>{
           const v=mm.attendance[p];
@@ -2789,7 +2921,7 @@ function renderEvolucion(){
         y:{
           reverse:true,
           min:1,
-          max:8,
+          max:16,
           ticks:{stepSize:1,color:'#64748B',font:{family:'Barlow Condensed',size:11}},
           grid:{color:'rgba(255,255,255,0.05)'},
           title:{display:true,text:'Posición',color:'#64748B',font:{family:'Barlow Condensed',size:11,weight:'bold'}},
@@ -2822,16 +2954,16 @@ function renderEvolucion(){
   const deltaEl=document.getElementById('evolucion-delta');
   if(deltaEl){
     const firstPos={};
-    top8.forEach(player=>{
+    top16.forEach(player=>{
       const playerPts={};
-      top8.forEach(p=>{
+      top16.forEach(p=>{
         const v=sorted[0].attendance[p];
         playerPts[p]=v==='X'?1:v==='O'?0.4:0;
       });
       const sp=Object.entries(playerPts).sort((a,b)=>b[1]-a[1]);
       firstPos[player]=sp.findIndex(([n])=>n===player)+1||'—';
     });
-    deltaEl.innerHTML=top8.map((player,i)=>{
+    deltaEl.innerHTML=top16.map((player,i)=>{
       const cur=i+1;
       const first=firstPos[player];
       const delta=typeof first==='number'?first-cur:0;
@@ -3027,92 +3159,93 @@ function renderWeirdStats(){
 // BRUNATO
 // ══════════════════════════════════════════
 function renderBrunato(){
-  const {stats}=getStats();
-  const ranking=getRanking(stats);
+  var bFont='font-family:sans-serif;';
+  var bFontBig='font-family:sans-serif;font-weight:900;letter-spacing:1px;';
 
-  // Temporada awards
-  const temporada=DB.brunato.awards.filter(a=>a.type==='temporada');
-  const partidos=DB.brunato.awards.filter(a=>a.type==='partido');
-
-  const awardsEl=document.getElementById('brunato-awards');
-  if(awardsEl){
-    if(!temporada.length){awardsEl.innerHTML=`<div class="empty">Brunatos de temporada por asignarse</div>`;}
+  // Ranking histórico
+  var mvpCount={};
+  DB.matches.forEach(function(m){if(m.mvp)mvpCount[m.mvp]=(mvpCount[m.mvp]||0)+1;});
+  var mvpRank=Object.entries(mvpCount).sort(function(a,b){return b[1]-a[1];});
+  var rankEl=document.getElementById('brunato-ranking');
+  if(rankEl){
+    if(!mvpRank.length){rankEl.innerHTML='<div class="empty">Sin Brunatos registrados aún</div>';}
     else{
-      awardsEl.innerHTML=`
-        <div class="card-title" style="color:#F59E0B;margin-bottom:14px">🏆 Brunato del Año</div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          ${temporada.map(a=>{
-            const s=stats[a.winner];
-            const pos=s?ranking.findIndex(([n])=>n===a.winner)+1:null;
-            return`<div style="background:linear-gradient(135deg,rgba(120,53,15,0.3),rgba(92,40,7,0.15));border:1px solid #F59E0B;border-radius:12px;padding:24px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-              <div style="font-size:48px">${a.icon}</div>
-              <div style="flex:1;min-width:180px">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#F59E0B;text-transform:uppercase">Temporada ${a.season}</div>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--white);letter-spacing:2px;line-height:1;cursor:pointer" onclick="openModal('${a.winner}')">${a.winner}</div>
-                <div style="font-family:'Barlow',sans-serif;font-style:italic;font-size:14px;color:#FCD34D;margin-top:4px">${a.reason}</div>
-              </div>
-              ${s&&pos?`<div style="text-align:center">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:#F59E0B">#${pos}</div>
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--grey)">RANKING</div>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--white);margin-top:4px">${s.pts}</div>
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;color:var(--grey)">PUNTOS</div>
-              </div>`:''}
-            </div>`;
-          }).join('')}
-        </div>`;
+      var t3=mvpRank.slice(0,3);
+      var ord=[t3[1],t3[0],t3[2]];
+      var cls=['p2','p1','p3'];var med=['🥈','🥇','🥉'];
+      var pod='<div class="podium" style="margin-bottom:16px">'+ord.map(function(it,i){
+        if(!it)return'';
+        return'<div class="podium-item" data-name="'+it[0]+'" style="cursor:pointer"><div class="podium-medal">'+med[i]+'</div><div class="podium-bar '+cls[i]+'" style="height:'+[80,100,65][i]+'px">'+it[1]+'x</div><div class="podium-name">'+it[0]+'</div></div>';
+      }).join('')+'</div>';
+      var rows=mvpRank.map(function(e,i){
+        return'<tr data-name="'+e[0]+'" style="cursor:pointer"><td class="rk-pos '+(i<3?['g1','g2','g3'][i]:'')+'">'+(i+1)+'</td><td class="rk-name">'+e[0]+'</td><td class="rk-pts">'+e[1]+'</td><td>🏆</td></tr>';
+      }).join('');
+      rankEl.innerHTML=pod+'<table style="width:100%"><thead><tr><th>#</th><th>Jugador</th><th>Brunatos</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+      rankEl.querySelectorAll('[data-name]').forEach(function(el){el.onclick=function(){openModal(el.getAttribute('data-name'));};});
     }
   }
 
-  // Photos
-  const bpg=document.getElementById('brunato-photos-grid');
-  const bpe=document.getElementById('brunato-photos-empty');
-  if(bpg){
-    if(!DB.brunato.photos||!DB.brunato.photos.length){bpg.style.display='none';if(bpe)bpe.style.display='block';}
-    else{bpg.style.display='grid';if(bpe)bpe.style.display='none';
-      bpg.innerHTML=DB.brunato.photos.map((src,i)=>`<div class="photo-slot" style="cursor:pointer" onclick="openLightbox(-2,${i})" title="Click para ampliar"><img src="${src}" alt="brunato foto"></div>`).join('');}
-  }
-  // Videos
-  const bvg=document.getElementById('brunato-videos-grid');
-  const bve=document.getElementById('brunato-videos-empty');
-  if(bvg){
-    if(!DB.brunato.videos||!DB.brunato.videos.length){bvg.style.display='none';if(bve)bve.style.display='block';}
-    else{bvg.style.display='grid';if(bve)bve.style.display='none';
-      bvg.innerHTML=DB.brunato.videos.map((v,i)=>`<div style="border-radius:10px;overflow:hidden;aspect-ratio:9/16;cursor:pointer" onclick="openVideoLightbox2(${i})"><video src="${v}" style="width:100%;height:100%;object-fit:cover" playsinline muted loop autoplay></video></div>`).join('');}
-  }
-  // Historial MVP (= Brunato del partido) — desde DB.matches
-  const sorted2=[...DB.matches].sort((a,b)=>b.date.localeCompare(a.date));
-  const mvpMatches=sorted2.filter(m=>m.mvp);
-  const partEl=document.getElementById('brunato-partidos-list');
-  const partEmpty=document.getElementById('brunato-partidos-empty');
-  if(partEl){
-    if(!mvpMatches.length){
-      partEl.style.display='none';
-      if(partEmpty)partEmpty.style.display='block';
-    } else {
-      partEl.style.display='flex';
-      partEl.style.flexDirection='column';
-      partEl.style.gap='8px';
-      if(partEmpty)partEmpty.style.display='none';
-      // Count MVP wins per player
-      const mvpCount={};
-      mvpMatches.forEach(m=>{mvpCount[m.mvp]=(mvpCount[m.mvp]||0)+1;});
-      partEl.innerHTML=mvpMatches.map(m=>{
-        const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-        const wins=mvpCount[m.mvp];
-        return`<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:9px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);cursor:pointer" onclick="openModal('${m.mvp}')">
-          <div style="font-size:22px">🏆</div>
-          <div style="flex:1">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);letter-spacing:1px">${m.mvp}</div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#FCD34D;text-transform:uppercase">${ds}</div>
-          </div>
-          ${wins>1?`<div style="text-align:center"><div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#F59E0B">${wins}x</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;letter-spacing:2px;color:var(--grey)">BRUNATOS</div></div>`:''}
-        </div>`;
+  // Brunato de ORO
+  var oroEl=document.getElementById('brunato-oro-list');
+  if(oroEl){
+    var awards=DB.brunato.awards.filter(function(a){return a.type==='temporada';});
+    if(!awards.length){oroEl.innerHTML='<div class="empty">El próximo Brunato de ORO se define a fin de año</div>';}
+    else{
+      oroEl.innerHTML=awards.map(function(a){
+        var d='<div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:9px;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);margin-bottom:8px">';
+        d+='<div style="font-size:28px">🏆</div><div style="flex:1">';
+        d+='<div class="bebas" style="font-size:20px;color:#F59E0B;letter-spacing:1px">'+a.winner+'</div>';
+        d+='<div style="font-size:12px;color:#FCD34D;font-style:italic">'+(a.title||'')+'</div>';
+        d+='<div style="font-size:11px;color:var(--grey);margin-top:2px">'+(a.reason||'')+'</div></div>';
+        d+='<div class="bebas" style="font-size:22px;color:#F59E0B">'+(a.season||'')+'</div></div>';
+        return d;
       }).join('');
     }
   }
+
+  // Brunato de la Fecha
+  var sorted2=[...DB.matches].filter(function(m){return m.mvp;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var partEl=document.getElementById('brunato-partidos-list');
+  var emptyEl=document.getElementById('brunato-partidos-empty');
+  if(!sorted2.length){
+    if(partEl)partEl.style.display='none';
+    if(emptyEl)emptyEl.style.display='block';
+  } else {
+    if(emptyEl)emptyEl.style.display='none';
+    if(partEl){
+      partEl.style.display='block';
+      partEl.innerHTML=sorted2.map(function(m){
+        var ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+        var frase=m.mvp_frase?'<div style="font-style:italic;font-size:13px;color:#FCD34D;margin-top:6px;border-left:2px solid rgba(245,158,11,0.4);padding-left:8px">“'+m.mvp_frase+'”</div>':'';
+        var d='<div style="display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:9px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2);margin-bottom:8px;cursor:pointer" data-name="'+m.mvp+'">';
+        d+='<div style="font-size:24px">🏆</div><div style="flex:1">';
+        d+='<div class="bebas" style="font-size:20px;color:var(--white);letter-spacing:1px">'+m.mvp+'</div>';
+        d+='<div class="barcond" style="font-size:11px;color:var(--grey);letter-spacing:1px">'+ds+'</div>';
+        d+=frase+'</div></div>';
+        return d;
+      }).join('');
+      partEl.querySelectorAll('[data-name]').forEach(function(el){el.onclick=function(){openModal(el.getAttribute('data-name'));};});
+    }
+  }
+
+  // Fotos
+  var bpg=document.getElementById('brunato-photos-grid');
+  var bpe=document.getElementById('brunato-photos-empty');
+  if(bpg){
+    if(!DB.brunato.photos||!DB.brunato.photos.length){bpg.style.display='none';if(bpe)bpe.style.display='block';}
+    else{bpg.style.display='grid';if(bpe)bpe.style.display='none';
+      bpg.innerHTML=DB.brunato.photos.map(function(src,i){return'<img src="'+src+'" class="gallery-img" onclick="openLightbox(-2,'+i+')" loading="lazy" alt="Brunato">';}).join('');}
+  }
+  // Videos
+  var bvg=document.getElementById('brunato-videos-grid');
+  var bve=document.getElementById('brunato-videos-empty');
+  if(bvg){
+    if(!DB.brunato.videos||!DB.brunato.videos.length){bvg.style.display='none';if(bve)bve.style.display='block';}
+    else{bvg.style.display='grid';if(bve)bve.style.display='none';
+      bvg.innerHTML=DB.brunato.videos.map(function(src){return'<video src="'+src+'" controls preload="none" style="width:100%;border-radius:8px"></video>';}).join('');}
+  }
 }
 
-// BRUNATO ADMIN
 function addBrunato(){
   const winner=document.getElementById('ba-winner').value.trim();
   const reason=document.getElementById('ba-reason').value.trim();
@@ -3122,7 +3255,7 @@ function addBrunato(){
   const season=date.length===4?date:new Date().getFullYear().toString();
   DB.brunato.awards.push({
     id:Date.now(),type,season,date:date||null,
-    winner,title:type==='temporada'?`Brunato del Año ${season}`:'Brunato del Partido',
+    winner,title:type==='temporada'?`Brunato del Año ${season}`:'Brunato de la Fecha',
     reason,icon:'🏆'
   });
   document.getElementById('ba-winner').value='';
