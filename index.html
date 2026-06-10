@@ -828,6 +828,9 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 .badge-gol{background:rgba(245,158,11,0.15);color:#fcd34d;border:1px solid rgba(245,158,11,0.3)}
 .badge-ley{background:rgba(234,179,8,0.15);color:#fde047;border:1px solid rgba(234,179,8,0.3)}
 .badge-mala{background:rgba(239,68,68,0.1);color:#f87171;border:1px solid rgba(239,68,68,0.2)}
+.badge-maquina{background:rgba(99,255,180,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.4)}
+.badge-lastre{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)}
+.badge-brunato{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.4)}
 </style>
 </head>
 <body>
@@ -899,8 +902,9 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     <div class="card">
       <div class="card-title">Sistema de puntos</div>
       <div class="puntos-row">
-        <div class="punto-pill"><span class="ico">⚽</span><span class="txt">Jugó = <span class="pts">1 punto</span></span></div>
-        <div class="punto-pill"><span class="ico">👁️</span><span class="txt">Fue a ver = <span class="pts">0.4 puntos</span></span></div>
+        <div class="punto-pill"><span class="ico">🏆</span><span class="txt">Ganó = <span class="pts">3 puntos</span></span></div>
+        <div class="punto-pill"><span class="ico">🤝</span><span class="txt">Empató = <span class="pts">1 punto</span></span></div>
+        <div class="punto-pill"><span class="ico">🥇</span><span class="txt">Brunato = <span class="pts">+2 puntos</span></span></div>
         <div class="punto-pill"><span class="ico">📅</span><span class="txt">Desde <span class="pts">Jul 2025</span></span></div>
       </div>
     </div>
@@ -921,7 +925,15 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 
   <div class="section" id="s-ranking">
     <div class="section-title" style="color:#EF4444">RANKING</div>
-    <div class="section-sub" id="rank-sub">Por puntos totales</div>
+    <div class="section-sub" id="rank-sub">Por puntos totales · <span id="rank-period-label">Todos los partidos</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="atab active" id="rfilter-todo" onclick="setRankFilter('todo',this)">📊 Todo</button>
+      <button class="atab" id="rfilter-2025" onclick="setRankFilter('2025',this)">2025</button>
+      <button class="atab" id="rfilter-2026" onclick="setRankFilter('2026',this)">2026</button>
+      <button class="atab" id="rfilter-last5" onclick="setRankFilter('last5',this)">Últimos 5</button>
+      <button class="atab" id="rfilter-last10" onclick="setRankFilter('last10',this)">Últimos 10</button>
+      <button class="atab" id="rfilter-last15" onclick="setRankFilter('last15',this)">Últimos 15</button>
+    </div>
     <div class="rank-controls">
       <input class="search-input" id="rank-search" placeholder="Buscar jugador..." oninput="filterRanking()">
     </div>
@@ -932,10 +944,13 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <th onclick="sortRanking('name')">Nombre</th>
           <th onclick="sortRanking('pts')">Puntos</th>
           <th onclick="sortRanking('played')">Jugó</th>
-          <th onclick="sortRanking('watched')">Vio</th>
           <th onclick="sortRanking('pct')">% Asis.</th>
           <th onclick="sortRanking('streak')">Racha</th>
-          <th onclick="sortRanking('maxStreak')">Máx. Racha</th>
+          <th onclick="sortRanking('wins')">V</th>
+          <th onclick="sortRanking('draws')">E</th>
+          <th onclick="sortRanking('losses')">P</th>
+          <th onclick="sortRanking('winPct')">%V</th>
+          <th onclick="sortRanking('lossPct')">%P</th>
           <th onclick="sortRanking('goles')">Goles</th>
           <th onclick="sortRanking('mvps')">Brunato</th>
           <th>Badges</th>
@@ -1088,7 +1103,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <p><strong style="color:var(--white)">1. ACEPTACIÓN DE LOS TÉRMINOS</strong><br>Al acceder y utilizar la plataforma Fútbol Martes 20hs GRUN (en adelante, "la Plataforma"), el usuario acepta en su totalidad los presentes Términos y Condiciones. Si no está de acuerdo con alguno de los términos aquí establecidos, deberá abstenerse de utilizar la Plataforma.</p>
       <p><strong style="color:var(--white)">2. DESCRIPCIÓN DEL SERVICIO</strong><br>La Plataforma es un sistema privado de estadísticas, rankings y seguimiento de asistencia destinado exclusivamente al grupo de fútbol amateur "GRUN", que se reúne los días martes a las 20 horas en las instalaciones del Colegio Champagnat, Buenos Aires, República Argentina. El acceso está restringido mediante contraseña y no es de carácter público.</p>
       <p><strong style="color:var(--white)">3. REGISTRO Y ACCESO</strong><br>El acceso requiere una contraseña de uso compartido. El usuario que la comparta con personas ajenas asume plena responsabilidad. La administración se reserva el derecho de modificarla en cualquier momento y sin previo aviso.</p>
-      <p><strong style="color:var(--white)">4. SISTEMA DE PUNTOS Y RANKING</strong><br>El ranking se calcula automáticamente: Jugador (X) +1 punto · Espectador (O) +0.4 puntos · SAF 🚑 0 puntos · Humo 💨 -0.5 puntos. No admite apelaciones, reconsideraciones ni negociaciones de ningún tipo.</p>
+      <p><strong style="color:var(--white)">4. SISTEMA DE PUNTOS Y RANKING</strong><br>El ranking se calcula automáticamente: Partido ganado +3 puntos · Partido empatado +1 punto · Partido perdido 0 puntos · Humo 💨 y Hincha 👁️ no suman ni restan puntos. No admite apelaciones, reconsideraciones ni negociaciones de ningún tipo.</p>
       <p><strong style="color:var(--white)">5. CARGA DE DATOS Y RESPONSABILIDAD</strong><br>La carga de información es responsabilidad exclusiva del administrador. Los datos ingresados se consideran definitivos una vez guardados. La Plataforma no se responsabiliza por datos incorrectos ingresados de buena o mala fe.</p>
       <p><strong style="color:var(--white)">6. EL HUMO</strong><br>Confirmar y no presentarse genera una penalización automática de 0.5 puntos y queda registrado de forma permanente bajo el badge 💨. La Plataforma no acepta justificaciones, descargos ni recursos de ningún tipo.</p>
       <p><strong style="color:var(--white)">7. EL SAF — SIN ACTIVIDAD FÍSICA</strong><br>Confirmar, no jugar, pero presentarse a ver el partido. No genera penalización y mantiene la racha activa. El badge 🚑 queda registrado en el perfil.</p>
@@ -1165,6 +1180,15 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
             <input type="text" class="finput" id="np-financista" placeholder="Nombre del jugador (opcional)" list="pl-dl">
           </div>
+          <div class="form-group">
+            <label class="flabel">🏆 ¿Quién ganó?</label>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button type="button" id="np-res-blanco" onclick="setResultado('np','blanco')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#cbd5e1;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">⚪ BLANCO</button>
+              <button type="button" id="np-res-empate" onclick="setResultado('np','empate')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#94a3b8;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">🤝 EMPATE</button>
+              <button type="button" id="np-res-negro" onclick="setResultado('np','negro')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#94a3b8;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">⚫ NEGRO</button>
+            </div>
+            <input type="hidden" id="np-resultado" value="">
+          </div>
         </div>
         <div class="form-group">
           <label class="flabel">¿Quiénes fueron?</label>
@@ -1216,6 +1240,15 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <div class="form-group">
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
             <input type="text" class="finput" id="edit-financista" placeholder="Nombre del jugador (opcional)" list="pl-dl">
+          </div>
+          <div class="form-group">
+            <label class="flabel">🏆 ¿Quién ganó?</label>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button type="button" id="edit-res-blanco" onclick="setResultado('edit','blanco')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#cbd5e1;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">⚪ BLANCO</button>
+              <button type="button" id="edit-res-empate" onclick="setResultado('edit','empate')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#94a3b8;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">🤝 EMPATE</button>
+              <button type="button" id="edit-res-negro" onclick="setResultado('edit','negro')" style="flex:1;padding:8px;border-radius:6px;border:1.5px solid var(--border);background:rgba(255,255,255,0.07);color:#94a3b8;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:13px">⚫ NEGRO</button>
+            </div>
+            <input type="hidden" id="edit-resultado" value="">
           </div>
           <div class="form-group">
             <label class="flabel">Asistencias</label>
@@ -1419,6 +1452,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="atab" onclick="statsTab('evolucion',this)">📈 Evolución</button>
       <button class="atab" onclick="statsTab('raras',this)">🎲 Stats raras</button>
       <button class="atab" onclick="statsTab('heatmap',this)">🗓️ Mapa asistencia</button>
+      <button class="atab" onclick="statsTab('heatmap-partidos',this)">🏆 Mapa partidos</button>
     </div>
 
     <!-- POR MES -->
@@ -1449,8 +1483,18 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <div id="heatmap-content" style="overflow-x:auto"></div>
     </div>
 
+    <!-- HEATMAP PARTIDOS -->
+    <div id="stats-heatmap-partidos" class="apanel">
+      <div id="heatmap-partidos-content" style="overflow-x:auto"></div>
+    </div>
+
     <!-- STATS RARAS -->
     <div id="stats-raras" class="apanel">
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button class="atab active" id="raras-filter-todo" onclick="setRarasFilter('todo',this)">📊 Todo</button>
+        <button class="atab" id="raras-filter-2025" onclick="setRarasFilter('2025',this)">2025</button>
+        <button class="atab" id="raras-filter-2026" onclick="setRarasFilter('2026',this)">2026</button>
+      </div>
       <div id="raras-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px"></div>
     </div>
   <!-- FOOTER -->
@@ -1529,6 +1573,11 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
   <div class="section" id="s-equipos">
     <div class="section-title">⚽ Equipos</div>
     <div class="section-sub">Estadísticas de Blanco vs Negro desde julio 2025</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <button class="atab active" id="eqfilter-todo" onclick="setEquiposFilter('todo',this)">📊 Todo</button>
+      <button class="atab" id="eqfilter-2025" onclick="setEquiposFilter('2025',this)">2025</button>
+      <button class="atab" id="eqfilter-2026" onclick="setEquiposFilter('2026',this)">2026</button>
+    </div>
     <div id="equipos-content"></div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
@@ -1667,6 +1716,7 @@ async function loadDB(){
   DB.matches=matches.map(m=>({_id:m.id,date:m.date,n:m.n,type:m.type,
     attendance:m.attendance||{},mvp:m.mvp,goals:m.goals||{},created_at:m.created_at,
     teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null,
+    resultado:m.resultado||null,
     humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
@@ -1693,6 +1743,13 @@ function doLogin(){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     initApp();
+    // Mostrar novedades si no expiró
+    const expiry = new Date('2026-06-17T23:59:59');
+    if(new Date() <= expiry){
+      setTimeout(()=>{
+        document.getElementById('modal-novedades').style.display='flex';
+      }, 800);
+    }
   } else {
     document.getElementById('le').style.display='block';
   }
@@ -1739,7 +1796,7 @@ function getStats(){
   sorted.forEach(m=>Object.keys(m.attendance).forEach(p=>allP.add(p)));
   const stats={};
   allP.forEach(p=>{
-    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0;
+    let pts=0,played=0,watched=0,humoCount=0,safCount=0,mvpCount=0;
     let debut=null,started=false;
     const hist=[];
     sorted.forEach(m=>{
@@ -1748,25 +1805,45 @@ function getStats(){
       const isSAF=m.saf&&m.saf.includes(p);
       if(!started&&(v||isHumo)){started=true;debut=m.date;}
       if(!started){hist.push('b');return;}
-      if(isHumo){pts-=0.5;humoCount++;tempS=0;hist.push('H');}
-      else if(isSAF){safCount++;tempS++;maxS=Math.max(maxS,tempS);hist.push('SAF');}
-      else if(v==='X'){pts+=1;played++;tempS++;maxS=Math.max(maxS,tempS);hist.push('X');}
-      else if(v==='O'){pts+=0.4;watched++;tempS++;maxS=Math.max(maxS,tempS);hist.push('O');}
-      else{tempS=0;hist.push('-');}
+      if(isHumo){humoCount++;hist.push('H');}
+      else if(isSAF){safCount++;hist.push('SAF');}
+      else if(v==='X'){
+        played++;hist.push('X');
+        const res=(m.resultado||'').toLowerCase();
+        const bl=(m.teams&&m.teams.blanco)||[];
+        const ng=(m.teams&&m.teams.negro)||[];
+        if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))pts+=3;
+        else if(res==='empate')pts+=1;
+      }
+      else if(v==='O'){watched++;hist.push('O');}
+      else{hist.push('-');}
+      if(m.mvp===p){pts+=2;mvpCount++;}
     });
-    let curS=0;
-    for(let i=hist.length-1;i>=0;i--){
-      if(hist[i]==='b')break;
-      if(hist[i]==='X'||hist[i]==='O'||hist[i]==='SAF'){curS++;}
-      else break;
+    // Win streak: breaks on loss/draw, not on absence
+    let curS=0,maxS=0,tempWin=0;
+    for(let i=sorted.length-1;i>=0;i--){
+      const m=sorted[i];if(m.attendance[p]!=='X')continue;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won)curS++;else if(lost||res==='empate')break;
     }
+    sorted.forEach(m=>{
+      if(m.attendance[p]!=='X')return;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won){tempWin++;maxS=Math.max(maxS,tempWin);}else if(lost||res==='empate')tempWin=0;
+    });
     const totalSince=hist.filter(h=>h!=='b').length;
-    const pct=totalSince>0?Math.round((played+watched)/totalSince*100):0;
-    const pctAll=Math.round((played+watched)/sorted.length*100);
+    const pct=totalSince>0?Math.round(played/totalSince*100):0;
+    const pctAll=Math.round(played/sorted.length*100);
     const s25=sorted.filter(m=>m.date.startsWith('2025'));
     const s26=sorted.filter(m=>m.date.startsWith('2026'));
     const calcYr=ms=>{const rel=ms.filter(m=>m.date>=(stats[p]?.debut||'9999'));if(!rel.length)return null;const x=rel.filter(m=>m.attendance[p]==='X'||m.attendance[p]==='O').length;return Math.round(x/rel.length*100);};
-    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:calcYr(s25),pct26:calcYr(s26),humoCount,safCount};
+    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:calcYr(s25),pct26:calcYr(s26),humoCount,safCount,mvpCount};
   });
   // Financista counts from matches (dynamic)
   const finFromMatches={};
@@ -1776,7 +1853,7 @@ function getStats(){
 }
 
 function getRanking(stats){
-  return Object.entries(stats).filter(([,s])=>s.pts>0).sort((a,b)=>b[1].pts-a[1].pts);
+  return Object.entries(stats).filter(([,s])=>s.played>0||s.watched>0).sort((a,b)=>b[1].pts-a[1].pts);
 }
 
 function getBadges(name,stats,rank){
@@ -1804,6 +1881,8 @@ function getBadges(name,stats,rank){
   if(s.humoCount>0) b.push({cls:'badge-humo',lbl:'💨 ×'+s.humoCount});
   // SAF
   if(s.safCount>0) b.push({cls:'badge-saf',lbl:'🚑 ×'+s.safCount});
+  // Brunato badge
+  if(s.mvpCount>0) b.push({cls:'badge-brunato',lbl:'🏆 Brunato ×'+s.mvpCount});
   // Inamovible: nunca humo ni saf + top 16
   if(s.humoCount===0&&s.safCount===0&&rank>=1&&rank<=16) b.push({cls:'badge-ina',lbl:'🧱 Inamovible'});
   // Goleador: top 3
@@ -1822,9 +1901,115 @@ function getBadges(name,stats,rank){
   }));
   const myAbs=(function(){let max=0,cur=0;s.hist.forEach(function(h){if(h==='-'){cur++;max=Math.max(max,cur);}else if(h!=='b'){cur=0;}});return max;})();
   if(myAbs===maxAbs&&myAbs>=3) b.push({cls:'badge-mala',lbl:'💀 Mala racha'});
+  // Máquina: más partidos ganados (absoluto)
+  const allWins={};
+  Object.keys(stats).forEach(function(n){
+    let w=0;
+    DB.matches.forEach(function(m){
+      const res=(m.resultado||'').toLowerCase();
+      if(!res)return;
+      const bl=(m.teams&&m.teams.blanco)||[];
+      const ng=(m.teams&&m.teams.negro)||[];
+      if((bl.includes(n)&&res==='blanco')||(ng.includes(n)&&res==='negro'))w++;
+    });
+    allWins[n]=w;
+  });
+  const maxWins=Math.max.apply(null,Object.values(allWins));
+  if(allWins[name]>0&&allWins[name]===maxWins) b.push({cls:'badge-maquina',lbl:'⚡ Máquina'});
+  // Lastre: mayor % de derrotas (min 5 partidos con resultado)
+  const lossPcts={};
+  Object.entries(stats).forEach(function([n,st]){
+    let l=0,total=0;
+    DB.matches.forEach(function(m){
+      const res=(m.resultado||'').toLowerCase();
+      if(!res)return;
+      const bl=(m.teams&&m.teams.blanco)||[];
+      const ng=(m.teams&&m.teams.negro)||[];
+      if(bl.includes(n)||ng.includes(n)){
+        total++;
+        if((bl.includes(n)&&res==='negro')||(ng.includes(n)&&res==='blanco'))l++;
+      }
+    });
+    if(total>=5)lossPcts[n]=l/total;
+  });
+  const maxLossPct=Math.max.apply(null,Object.values(lossPcts));
+  if(lossPcts[name]!==undefined&&lossPcts[name]===maxLossPct) b.push({cls:'badge-lastre',lbl:'🪦 Lastre'});
   return b;
 }
 
+function getBadgesFiltered(name,stats,rank,matches){
+  const s=stats[name];
+  if(!s)return[];
+  const sorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
+  const b=[];
+  // Fundador — always based on all-time data
+  const inFirst3=sorted.slice(0,3).some(m=>m.attendance[name]);
+  if(inFirst3&&s.pctAll>50) b.push({cls:'fundador',lbl:'Fundador'});
+  if(rank>=1&&rank<=16) b.push({cls:'titular',lbl:'Titular'});
+  if(s.curS>=5) b.push({cls:'racha',lbl:'🔥 Racha'});
+  if(s.played+s.watched<=2) b.push({cls:'fantasma',lbl:'Fantasma'});
+  if(s.watched>0||s.safCount>0) b.push({cls:'hincha',lbl:'Hincha'});
+  if(name==='Kuza'||name==='Batata') b.unshift({cls:'badge-dt',lbl:'📋 DT'});
+  const finTotal=s.finDynamic||0;
+  if(finTotal>0) b.unshift({cls:'badge-fin',lbl:'💰 ×'+finTotal});
+  if(s.humoCount>0) b.push({cls:'badge-humo',lbl:'💨 ×'+s.humoCount});
+  if(s.safCount>0) b.push({cls:'badge-saf',lbl:'🚑 ×'+s.safCount});
+  if(s.mvpCount>0) b.push({cls:'badge-brunato',lbl:'🏆 Brunato ×'+s.mvpCount});
+  if(s.humoCount===0&&s.safCount===0&&rank>=1&&rank<=16) b.push({cls:'badge-ina',lbl:'🧱 Inamovible'});
+  // Goleador — filtered
+  const allGoals={};
+  matches.forEach(function(m){Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)allGoals[e[0]]=(allGoals[e[0]]||0)+e[1];});});
+  const topGoals=Object.entries(allGoals).sort(function(a,b){return b[1]-a[1];}).slice(0,3).map(function(e){return e[0];});
+  if(topGoals.includes(name)) b.push({cls:'badge-gol',lbl:'🎯 Goleador'});
+  // Leyenda — filtered
+  const maxPlayed=Math.max.apply(null,Object.values(stats).map(function(st){return st.played;}));
+  if(s.played===maxPlayed&&s.played>0) b.push({cls:'badge-ley',lbl:'👑 Leyenda'});
+  // Mala racha — filtered
+  const maxAbs=Math.max.apply(null,Object.values(stats).map(function(st){
+    let max=0,cur=0;
+    (st.hist||[]).forEach(function(h){if(h==='-'){cur++;max=Math.max(max,cur);}else if(h!=='b'){cur=0;}});
+    return max;
+  }));
+  const myAbs=(function(){let max=0,cur=0;(s.hist||[]).forEach(function(h){if(h==='-'){cur++;max=Math.max(max,cur);}else if(h!=='b'){cur=0;}});return max;})();
+  if(myAbs===maxAbs&&myAbs>=3) b.push({cls:'badge-mala',lbl:'💀 Mala racha'});
+  // Máquina — filtered
+  const allWins={};
+  Object.keys(stats).forEach(function(n){
+    let w=0;
+    matches.forEach(function(m){
+      const res=(m.resultado||'').toLowerCase();
+      if(!res)return;
+      const bl=(m.teams&&m.teams.blanco)||[];
+      const ng=(m.teams&&m.teams.negro)||[];
+      if((bl.includes(n)&&res==='blanco')||(ng.includes(n)&&res==='negro'))w++;
+    });
+    allWins[n]=w;
+  });
+  const maxWins=Math.max.apply(null,Object.values(allWins).concat([0]));
+  if(maxWins>0&&allWins[name]>0&&allWins[name]===maxWins) b.push({cls:'badge-maquina',lbl:'⚡ Máquina'});
+  // Lastre — filtered
+  const lossPcts={};
+  Object.keys(stats).forEach(function(n){
+    let l=0,total=0;
+    matches.forEach(function(m){
+      const res=(m.resultado||'').toLowerCase();
+      if(!res)return;
+      const bl=(m.teams&&m.teams.blanco)||[];
+      const ng=(m.teams&&m.teams.negro)||[];
+      if(bl.includes(n)||ng.includes(n)){
+        total++;
+        if((bl.includes(n)&&res==='negro')||(ng.includes(n)&&res==='blanco'))l++;
+      }
+    });
+    if(total>=5)lossPcts[n]=l/total;
+  });
+  const vals=Object.values(lossPcts);
+  if(vals.length){
+    const maxLossPct=Math.max.apply(null,vals);
+    if(lossPcts[name]!==undefined&&lossPcts[name]===maxLossPct) b.push({cls:'badge-lastre',lbl:'🪦 Lastre'});
+  }
+  return b;
+}
 
 function renderFAQAdmin(){
   const el=document.getElementById('faq-admin-list');
@@ -1924,7 +2109,7 @@ function renderHeatmap(){
   var r2=getStats();var stats=r2.stats;
   var ranking=getRanking(stats);
   var sorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
-  var players=ranking.slice(0,20).map(e=>e[0]);
+  var players=ranking.map(e=>e[0]);
   var COL=22,ROW=20,NW=110;
   var hdr=sorted.map(m=>{
     var d=new Date(m.date+'T12:00:00');
@@ -1963,7 +2148,49 @@ function renderHeatmap(){
   });
 }
 
-// INIT
+function renderHeatmapPartidos(){
+  var el=document.getElementById('heatmap-partidos-content');
+  if(!el)return;
+  var r2=getStats();var stats=r2.stats;
+  var ranking=getRanking(stats);
+  var sorted=[...DB.matches].filter(m=>m.resultado).sort((a,b)=>a.date.localeCompare(b.date));
+  if(!sorted.length){el.innerHTML='<div class="empty">Sin resultados cargados aún</div>';return;}
+  var players=ranking.map(e=>e[0]);
+  var COL=22,ROW=20,NW=110;
+  var hdr=sorted.map(m=>{
+    var d=new Date(m.date+'T12:00:00');
+    return`<div style="width:${COL}px;min-width:${COL}px;text-align:center;font-size:9px;color:#64748b;transform:rotate(-45deg);transform-origin:bottom left;height:34px;white-space:nowrap;padding-top:18px">${d.getMonth()+1}/${d.getDate()}</div>`;
+  }).join('');
+  var rowsHtml=players.map(name=>{
+    var cells=sorted.map(m=>{
+      const res=(m.resultado||'').toLowerCase();
+      const bl=m.teams&&m.teams.blanco||[];
+      const ng=m.teams&&m.teams.negro||[];
+      const inB=bl.includes(name);
+      const inN=ng.includes(name);
+      let bg,tip;
+      if(!inB&&!inN){bg='rgba(255,255,255,0.04)';tip='No jugó';}
+      else if(inB&&res==='blanco'||inN&&res==='negro'){bg='rgba(74,222,128,0.75)';tip='Ganó';}
+      else if(res==='empate'){bg='rgba(100,116,139,0.55)';tip='Empató';}
+      else{bg='rgba(239,68,68,0.6)';tip='Perdió';}
+      return`<div title="${m.date} ${tip}" style="width:${COL}px;min-width:${COL}px;height:${ROW}px;background:${bg};border-radius:2px"></div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;gap:2px;margin-bottom:2px">
+      <div style="width:${NW}px;min-width:${NW}px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:8px" data-name="${name}" onclick="openModal('${name}')">${name}</div>
+      ${cells}
+    </div>`;
+  }).join('');
+  var leg=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:#94a3b8">
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(74,222,128,0.75);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Ganó</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(100,116,139,0.55);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Empató</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(239,68,68,0.6);border-radius:2px;vertical-align:middle;margin-right:3px"></span>Perdió</span>
+    <span><span style="display:inline-block;width:12px;height:12px;background:rgba(255,255,255,0.04);border-radius:2px;vertical-align:middle;margin-right:3px"></span>No jugó</span>
+  </div>`;
+  el.innerHTML=leg+`<div style="overflow-x:auto"><div style="min-width:fit-content">
+    <div style="display:flex;align-items:flex-end;gap:2px;margin-bottom:4px;padding-left:${NW}px">${hdr}</div>
+    ${rowsHtml}
+  </div></div>`;
+}
 var WC_GRUPOS={"A":["🇲🇽 México","🇿🇦 Sudáfrica","🇰🇷 Corea del Sur","🇨🇿 Chequia"],"B":["🇨🇦 Canadá","🇨🇭 Suiza","🇶🇦 Qatar","🇧🇦 Bosnia y Herzegovina"],"C":["🇧🇷 Brasil","🇲🇦 Marruecos","🇭🇹 Haití","🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia"],"D":["🇺🇸 EE.UU.","🇵🇾 Paraguay","🇦🇺 Australia","🇹🇷 Turquía"],"E":["🇩🇪 Alemania","🇪🇨 Ecuador","🇨🇮 Costa Marfil","🇨🇼 Curazao"],"F":["🇳🇱 Países Bajos","🇯🇵 Japón","🇹🇳 Túnez","🇸🇪 Suecia"],"G":["🇧🇪 Bélgica","🇮🇷 Irán","🇪🇬 Egipto","🇳🇿 Nueva Zelanda"],"H":["🇪🇸 España","🇺🇾 Uruguay","🇸🇦 Arabia Saudí","🇨🇻 Cabo Verde"],"I":["🇫🇷 Francia","🇸🇳 Senegal","🇳🇴 Noruega","🇮🇶 Irak"],"J":["🇦🇷 Argentina","🇩🇿 Argelia","🇦🇹 Austria","🇯🇴 Jordania"],"K":["🇵🇹 Portugal","🇨🇴 Colombia","🇺🇿 Uzbekistán","🇨🇩 Congo RD"],"L":["🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra","🇭🇷 Croacia","🇬🇭 Ghana","🇵🇦 Panamá"]};
 function renderWCGrupos(){var el=document.getElementById('wc-grupos');if(!el)return;var h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">';Object.entries(WC_GRUPOS).forEach(function(e){var g=e[0];var teams=e[1];var isArg=g==='J';var bord=isArg?'border:2px solid rgba(37,99,235,0.6)':'border:1px solid var(--border)';h+='<div style="background:var(--bg-card);border-radius:10px;padding:14px;'+bord+'"><div style="font-size:15px;font-weight:900;letter-spacing:2px;color:'+(isArg?'#93c5fd':'var(--teal)')+';margin-bottom:10px">GRUPO '+g+(isArg?' 🇦🇷':'')+'</div>';teams.forEach(function(t){h+='<div style="font-size:13px;color:var(--white);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.05)">'+t+'</div>';});h+='</div>';});h+='</div>';el.innerHTML=h;}
 async function initApp(){
@@ -1991,11 +2218,17 @@ function refreshAll(){
     const r=getStats();
     stats=r.stats;sorted=r.sorted;
     ranking=getRanking(stats);
-    document.getElementById('rank-sub').textContent=`Por puntos totales · ${sorted.length} partidos`;
     document.getElementById('partidos-sub').textContent=`Historial completo · ${sorted.length} fechas`;
   }catch(e){console.error('getStats error:',e);return;}
+  // Ranking uses filtered stats
+  try{
+    const rf=getStatsFiltered();
+    const rankingF=getRanking(rf.stats);
+    const lbl=document.getElementById('rank-period-label');
+    if(lbl&&lbl.textContent==='')lbl.textContent='Todos los partidos';
+    safeRender(()=>renderRanking(rf.stats,rankingF),'renderRanking');
+  }catch(e){console.error('rankFilter error:',e);safeRender(()=>renderRanking(stats,ranking),'renderRanking');}
   safeRender(()=>renderInicio(stats,sorted,ranking),'renderInicio');
-  safeRender(()=>renderRanking(stats,ranking),'renderRanking');
   safeRender(()=>renderPartidos(sorted),'renderPartidos');
   safeRender(()=>renderJugadores(stats,ranking),'renderJugadores');
   safeRender(()=>renderGoleadores(sorted),'renderGoleadores');
@@ -2033,7 +2266,8 @@ function renderInicio(stats,sorted,ranking){
       <div class="podium-pts">${it[1].played} jugados</div>
     </div>`:'' ).join('')}</div>`;
   // rachas
-  const topS=ranking.filter(([,s])=>s.curS>0).sort((a,b)=>b[1].curS-a[1].curS).slice(0,6);
+  const {stats:allStats}=getStats();
+  const topS=ranking.filter(([n,s])=>s.curS>0&&(allStats[n]?.played||0)>=5).sort((a,b)=>b[1].curS-a[1].curS).slice(0,6);
   document.getElementById('streak-list').innerHTML=topS.map(([n,s],i)=>`
     <div class="streak-item" onclick="openModal('${n}')">
       <div class="streak-pos">${i+1}</div>
@@ -2047,33 +2281,162 @@ function renderInicio(stats,sorted,ranking){
   const op=Object.entries(last.attendance).filter(([,v])=>v==='O');
   const ds=new Date(last.date+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const tipoStr=last.type==='futbol11'?'Fútbol 11':'Fútbol 8';
+  const bl=last.teams&&last.teams.blanco&&last.teams.blanco.length?last.teams.blanco:null;
+  const ng=last.teams&&last.teams.negro&&last.teams.negro.length?last.teams.negro:null;
+  const res=(last.resultado||'').toLowerCase();
+  const goals=Object.entries(last.goals||{}).filter(([,g])=>g>0).sort((a,b)=>b[1]-a[1]);
+  const humos=last.humo&&last.humo.length?last.humo:[];
   document.getElementById('last-match').innerHTML=`
     <div class="lm-header">
       <div class="lm-date">${ds}</div>
       <span class="tipo-tag">${tipoStr} · ${last.n} jugadores</span>
     </div>
-    ${last.mvp?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:9px">⭐ MVP: ${last.mvp}</div>`:''}
-    <div class="player-chips">
-      ${xp.map(([n])=>`<div class="chip" onclick="openModal('${n}')">${n}</div>`).join('')}
-      ${op.map(([n])=>`<div class="chip o" onclick="openModal('${n}')">${n} 👁️</div>`).join('')}
-    </div>`;
+    ${res?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;color:${res==='empate'?'#94a3b8':'#4ade80'};margin-bottom:8px">${res==='blanco'?'🏆 Ganó Blanco':res==='negro'?'🏆 Ganó Negro':'🤝 Empate'}</div>`:''}
+    ${bl&&ng?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 10px${res==='blanco'?';border:1.5px solid #4ade80':''}">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#cbd5e1;margin-bottom:5px">⚪ BLANCO${res==='blanco'?' 🏆':''}</div>
+        <div class="player-chips">${bl.map(n=>`<div class="chip" onclick="openModal('${n}')" style="background:rgba(255,255,255,0.15)">${n}</div>`).join('')}</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px${res==='negro'?';border:1.5px solid #4ade80':''}">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#94a3b8;margin-bottom:5px">⚫ NEGRO${res==='negro'?' 🏆':''}</div>
+        <div class="player-chips">${ng.map(n=>`<div class="chip" onclick="openModal('${n}')" style="background:rgba(0,0,0,0.35)">${n}</div>`).join('')}</div>
+      </div>
+    </div>`:`<div class="player-chips" style="margin-bottom:8px">${xp.map(([n])=>`<div class="chip" onclick="openModal('${n}')">${n}</div>`).join('')}</div>`}
+    ${op.length?`<div class="player-chips" style="margin-bottom:4px">${op.map(([n])=>{const isSAF=last.saf&&last.saf.includes(n);return`<div class="chip o" onclick="openModal('${n}')">${n} ${isSAF?'🚑':'👁️'}</div>`}).join('')}</div>`:''}
+    ${humos.length?`<div class="player-chips" style="margin-bottom:4px">${humos.map(n=>`<div class="chip" style="background:rgba(148,163,184,0.15);color:#94a3b8" onclick="openModal('${n}')">${n} 💨</div>`).join('')}</div>`:''}
+    ${last.financista?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#86efac;margin-top:6px">💰 Pagó la cancha: ${last.financista}</div>`:''}
+    ${goals.length?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px;margin-bottom:5px">⚽ GOLES</div><div class="player-chips">${goals.map(([n,g])=>`<div class="chip">${n}: ${g}</div>`).join('')}</div>`:''}
+    ${last.mvp?`<div style="color:#F59E0B;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px">🏆 Brunato: ${last.mvp}${last.mvp_frase?` — <em style="color:#FCD34D">"${last.mvp_frase}"</em>`:''}</div>`:''}
+  `;
 }
 
 // RANKING
 let rankData=[];
 let rankSort={col:'pos',dir:1};
+let rankFilter='todo';
+
+function setRankFilter(filter, btn){
+  rankFilter=filter;
+  document.querySelectorAll('[id^="rfilter-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={'todo':'Todos los partidos','2025':'Temporada 2025','2026':'Temporada 2026','last5':'Últimos 5 partidos','last10':'Últimos 10 partidos','last15':'Últimos 15 partidos'};
+  const el=document.getElementById('rank-period-label');
+  if(el)el.textContent=labels[filter]||'';
+  const {stats}=getStatsFiltered();
+  const ranking=getRanking(stats);
+  renderRanking(stats,ranking);
+}
+
+function getStatsFiltered(){
+  const allSorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
+  let filtered;
+  if(rankFilter==='2025') filtered=allSorted.filter(m=>m.date.startsWith('2025'));
+  else if(rankFilter==='2026') filtered=allSorted.filter(m=>m.date.startsWith('2026'));
+  else if(rankFilter==='last5') filtered=allSorted.slice(-5);
+  else if(rankFilter==='last10') filtered=allSorted.slice(-10);
+  else if(rankFilter==='last15') filtered=allSorted.slice(-15);
+  else filtered=allSorted;
+  return getStatsFromMatches(filtered);
+}
+
+function getStatsFromMatches(sorted){
+  const allP=new Set();
+  sorted.forEach(m=>Object.keys(m.attendance).forEach(p=>allP.add(p)));
+  const stats={};
+  allP.forEach(p=>{
+    let pts=0,played=0,watched=0,humoCount=0,safCount=0,mvpCount=0;
+    let debut=null,started=false;
+    const hist=[];
+    sorted.forEach(m=>{
+      const v=m.attendance[p];
+      const isHumo=m.humo&&m.humo.includes(p);
+      const isSAF=m.saf&&m.saf.includes(p);
+      if(!started&&(v||isHumo)){started=true;debut=m.date;}
+      if(!started){hist.push('b');return;}
+      if(isHumo){humoCount++;hist.push('H');}
+      else if(isSAF){safCount++;hist.push('SAF');}
+      else if(v==='X'){
+        played++;hist.push('X');
+        const res=(m.resultado||'').toLowerCase();
+        const bl=(m.teams&&m.teams.blanco)||[];
+        const ng=(m.teams&&m.teams.negro)||[];
+        if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))pts+=3;
+        else if(res==='empate')pts+=1;
+      }
+      else if(v==='O'){watched++;hist.push('O');}
+      else{hist.push('-');}
+      if(m.mvp===p){pts+=2;mvpCount++;}
+    });
+    let curS=0,maxS=0,tempWin=0;
+    for(let i=sorted.length-1;i>=0;i--){
+      const m=sorted[i];if(m.attendance[p]!=='X')continue;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won)curS++;else if(lost||res==='empate')break;
+    }
+    sorted.forEach(m=>{
+      if(m.attendance[p]!=='X')return;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won){tempWin++;maxS=Math.max(maxS,tempWin);}else if(lost||res==='empate')tempWin=0;
+    });
+    const totalSince=hist.filter(h=>h!=='b').length;
+    const pct=totalSince>0?Math.round(played/totalSince*100):0;
+    const pctAll=Math.round(played/sorted.length*100);
+    const finFromMatches={};
+    sorted.forEach(function(m){if(m.financista)finFromMatches[m.financista]=(finFromMatches[m.financista]||0)+1;});
+    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:null,pct26:null,humoCount,safCount,mvpCount,finDynamic:finFromMatches[p]||0};
+  });
+  return{stats,sorted};
+}
 function renderRanking(stats,ranking){
+  // Use filtered matches for ALL calculations
+  const allSorted=[...DB.matches].sort((a,b)=>a.date.localeCompare(b.date));
+  let filteredMatches;
+  if(rankFilter==='2025') filteredMatches=allSorted.filter(m=>m.date.startsWith('2025'));
+  else if(rankFilter==='2026') filteredMatches=allSorted.filter(m=>m.date.startsWith('2026'));
+  else if(rankFilter==='last5') filteredMatches=allSorted.slice(-5);
+  else if(rankFilter==='last10') filteredMatches=allSorted.slice(-10);
+  else if(rankFilter==='last15') filteredMatches=allSorted.slice(-15);
+  else filteredMatches=allSorted;
+
   const goalMap={};const mvpMap={};
-  DB.matches.forEach(function(m){
+  const wMap={};const eMap={};const lMap={};
+  filteredMatches.forEach(function(m){
     Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)goalMap[e[0]]=(goalMap[e[0]]||0)+e[1];});
     if(m.mvp)mvpMap[m.mvp]=(mvpMap[m.mvp]||0)+1;
+    const res=(m.resultado||'').toLowerCase();
+    if(!res)return;
+    const bl=(m.teams&&m.teams.blanco)||[];
+    const ng=(m.teams&&m.teams.negro)||[];
+    bl.forEach(function(p){
+      if(res==='blanco'){wMap[p]=(wMap[p]||0)+1;}
+      else if(res==='empate'){eMap[p]=(eMap[p]||0)+1;}
+      else if(res==='negro'){lMap[p]=(lMap[p]||0)+1;}
+    });
+    ng.forEach(function(p){
+      if(res==='negro'){wMap[p]=(wMap[p]||0)+1;}
+      else if(res==='empate'){eMap[p]=(eMap[p]||0)+1;}
+      else if(res==='blanco'){lMap[p]=(lMap[p]||0)+1;}
+    });
   });
-  rankData=ranking.map(([name,s],i)=>({
-    pos:i+1,name,pts:s.pts,played:s.played,watched:s.watched,
-    pct:s.pct,streak:s.curS,maxStreak:s.maxS,
-    goles:goalMap[name]||0,mvps:mvpMap[name]||0,
-    badges:getBadges(name,stats,i+1)
-  }));
+  rankData=ranking.map(([name,s],i)=>{
+    const w=wMap[name]||0,e=eMap[name]||0,l=lMap[name]||0;
+    const total=w+e+l;
+    return {
+      pos:i+1,name,pts:s.pts,played:s.played,watched:s.watched,
+      pct:s.pct,streak:s.curS,maxStreak:s.maxS,
+      wins:w,draws:e,losses:l,
+      winPct:total>=5?Math.round(w/total*100):null,
+      lossPct:total>=5?Math.round(l/total*100):null,
+      goles:goalMap[name]||0,mvps:mvpMap[name]||0,
+      badges:getBadgesFiltered(name,stats,i+1,filteredMatches)
+    };
+  });
   drawRankTable(rankData);
 }
 function drawRankTable(data){
@@ -2083,10 +2446,13 @@ function drawRankTable(data){
       <td class="rk-name">${r.name}</td>
       <td class="rk-pts">${r.pts}</td>
       <td>${r.played}</td>
-      <td>${r.watched}</td>
       <td>${r.pct}%</td>
       <td><span class="sc ${r.streak>0?'on':'off'}">${r.streak>0?'+'+r.streak:'—'}</span></td>
-      <td><span class="sc on">${r.maxStreak}</span></td>
+      <td style="color:#4ade80;font-weight:600">${r.wins||'—'}</td>
+      <td style="color:#94a3b8;font-weight:600">${r.draws||'—'}</td>
+      <td style="color:#f87171;font-weight:600">${r.losses||'—'}</td>
+      <td style="color:#4ade80;font-weight:600">${r.winPct!==null?r.winPct+'%':'—'}</td>
+      <td style="color:#f87171;font-weight:600">${r.lossPct!==null?r.lossPct+'%':'—'}</td>
       <td>${r.goles>0?'⚽ '+r.goles:'—'}</td>
       <td>${r.mvps>0?'🏆 '+r.mvps:'—'}</td>
       <td><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
@@ -2121,12 +2487,12 @@ function renderPartidos(sorted){
       <div class="partido-body" id="pb-${idx}">
         ${(()=>{const bl=m.teams&&m.teams.blanco&&m.teams.blanco.length?m.teams.blanco:null;const ng=m.teams&&m.teams.negro&&m.teams.negro.length?m.teams.negro:null;
         if(bl&&ng)return`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 10px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#cbd5e1;margin-bottom:5px">⚪ BLANCO</div>
+          <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 10px${m.resultado==='blanco'?';border:1.5px solid #4ade80':''}">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#cbd5e1;margin-bottom:5px">⚪ BLANCO${m.resultado==='blanco'?' 🏆':''}</div>
             <div class="player-chips">${bl.map(n=>`<div class="chip" onclick="event.stopPropagation();openModal('${n}')" style="background:rgba(255,255,255,0.15)">${n}</div>`).join('')}</div>
           </div>
-          <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px">
-            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#94a3b8;margin-bottom:5px">⚫ NEGRO</div>
+          <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px${m.resultado==='negro'?';border:1.5px solid #4ade80':''}">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;color:#94a3b8;margin-bottom:5px">⚫ NEGRO${m.resultado==='negro'?' 🏆':''}</div>
             <div class="player-chips">${ng.map(n=>`<div class="chip" onclick="event.stopPropagation();openModal('${n}')" style="background:rgba(0,0,0,0.35)">${n}</div>`).join('')}</div>
           </div>
         </div>`;
@@ -2496,6 +2862,27 @@ function getGoalsFromUI(state){
   return goals;
 }
 
+function setResultado(prefix,val){
+  document.getElementById(prefix+'-resultado').value=val;
+  ['blanco','empate','negro'].forEach(function(opt){
+    const btn=document.getElementById(prefix+'-res-'+opt);
+    if(!btn)return;
+    const active=opt===val;
+    btn.style.background=active?(opt==='blanco'?'rgba(255,255,255,0.25)':opt==='negro'?'rgba(0,0,0,0.6)':'rgba(100,116,139,0.4)'):'rgba(255,255,255,0.07)';
+    btn.style.borderColor=active?'#4ade80':'var(--border)';
+    btn.style.color=active?'#4ade80':(opt==='blanco'?'#cbd5e1':'#94a3b8');
+  });
+}
+function resetResultado(prefix){
+  document.getElementById(prefix+'-resultado').value='';
+  ['blanco','empate','negro'].forEach(function(opt){
+    const btn=document.getElementById(prefix+'-res-'+opt);
+    if(!btn)return;
+    btn.style.background='rgba(255,255,255,0.07)';
+    btn.style.borderColor='var(--border)';
+    btn.style.color=opt==='blanco'?'#cbd5e1':'#94a3b8';
+  });
+}
 function resetNewMatch(){
   psState={};
   renderPS('ps-grid','ps-cx','ps-co','ps-ct','ps');
@@ -2503,6 +2890,7 @@ function resetNewMatch(){
   document.getElementById('np-mvp').value='';
     document.getElementById('np-financista').value='';
   document.getElementById('np-type').value='futbol8';
+  resetResultado('np');
   updateGoalsList('np-goals-list',{});
 }
 
@@ -2523,6 +2911,7 @@ async function saveNewMatch(){
   const mvp=document.getElementById('np-mvp').value.trim()||null;
   const mvp_frase=document.getElementById('np-mvp-frase')?document.getElementById('np-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('np-financista').value.trim()||null;
+  const resultado=document.getElementById('np-resultado').value||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
   const humo_list=[];const saf_list=[];
@@ -2536,8 +2925,8 @@ async function saveNewMatch(){
   const goals=getGoalsFromUI(psState);
   showToast('Guardando...','');
   try{
-    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
-    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:humo_list,saf:saf_list});
+    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
+    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:humo_list,saf:saf_list});
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();
     renderAdminMatchList();
@@ -2573,6 +2962,7 @@ function openEditMatch(idx){
   var efg=document.getElementById('edit-frase-group');
   if(efg)efg.style.display=m.mvp?'block':'none';
   document.getElementById('edit-financista').value=m.financista||'';
+  if(m.resultado)setResultado('edit',m.resultado);else resetResultado('edit');
   epsState={};
   const mTeams=m.teams||{blanco:[],negro:[]};
   Object.entries(m.attendance).forEach(([p,v])=>{
@@ -2608,6 +2998,7 @@ async function saveEditMatch(){
   const mvp=document.getElementById('edit-mvp').value.trim()||null;
   const mvp_frase=document.getElementById('edit-mvp-frase')?document.getElementById('edit-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('edit-financista').value.trim()||null;
+  const resultado=document.getElementById('edit-resultado').value||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
   const e_humo=[];const e_saf=[];
@@ -2621,8 +3012,8 @@ async function saveEditMatch(){
   const goals=getGoalsFromUI(epsState);
   const matchId=DB.matches[idx]._id;
   try{
-    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
-    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,humo:e_humo,saf:e_saf};
+    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
+    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:e_humo,saf:e_saf};
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();renderAdminMatchList();backToList();
     showToast('Partido actualizado ✓');
@@ -2954,6 +3345,7 @@ function statsTab(id, btn){
   if(id==='evolucion' && !evoChart){try{renderEvolucion();}catch(e){console.error('renderEvolucion:',e);}}
   if(id==='raras'){try{renderWeirdStats();}catch(e){console.error('renderWeirdStats:',e);document.getElementById('raras-grid').innerHTML='<div class="empty">Error: '+e.message+'</div>';}}
   if(id==='heatmap'){try{renderHeatmap();}catch(e){console.error('renderHeatmap:',e);}}
+  if(id==='heatmap-partidos'){try{renderHeatmapPartidos();}catch(e){console.error('renderHeatmapPartidos:',e);}}
 }
 
 // ══════════════════════════════════════════
@@ -3088,13 +3480,19 @@ function renderEvolucion(){
     const data=sorted.map((m,idx)=>{
       const matchesSoFar=sorted.slice(0,idx+1);
       const playerPts={};
-      // calc points for all top16 up to this match
+      // calc points for all top16 up to this match using new system
       top16.forEach(p=>{
         let pts=0;
         matchesSoFar.forEach(mm=>{
           const v=mm.attendance[p];
-          if(v==='X')pts+=1;
-          else if(v==='O')pts+=0.4;
+          if(v==='X'){
+            const res=(mm.resultado||'').toLowerCase();
+            const bl=(mm.teams&&mm.teams.blanco)||[];
+            const ng=(mm.teams&&mm.teams.negro)||[];
+            if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))pts+=3;
+            else if(res==='empate')pts+=1;
+          }
+          if(mm.mvp===p)pts+=2;
         });
         playerPts[p]=pts;
       });
@@ -3188,16 +3586,31 @@ function renderEvolucion(){
 // ══════════════════════════════════════════
 // STATS RARAS
 // ══════════════════════════════════════════
+let rarasFilter='todo';
+function setRarasFilter(filter,btn){
+  rarasFilter=filter;
+  document.querySelectorAll('[id^="raras-filter-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  try{renderWeirdStats();}catch(e){console.error('renderWeirdStats:',e);}
+}
+
 function renderWeirdStats(){
-  const {stats,sorted}=getStats();
+  const allStats=getStats();
+  const allSorted=allStats.sorted;
+  let filtered;
+  if(rarasFilter==='2025') filtered=allSorted.filter(m=>m.date.startsWith('2025'));
+  else if(rarasFilter==='2026') filtered=allSorted.filter(m=>m.date.startsWith('2026'));
+  else filtered=allSorted;
+  const {stats}=getStatsFromMatches(filtered);
+  const sorted=filtered;
   const ranking=getRanking(stats);
   const players=ranking.map(([n])=>n);
 
   const cards=[];
 
-  // 1. Racha más larga de la historia (global)
-  const allMaxStreaks=ranking.map(([n,s])=>({name:n,val:s.maxS})).sort((a,b)=>b.val-a.val);
-  cards.push({icon:'🔥',title:'Racha más larga de la historia',winner:allMaxStreaks[0].name,val:`${allMaxStreaks[0].val} martes consecutivos`,color:'#EF4444'});
+  // 1. Racha ganadora más larga
+  const allMaxStreaks=ranking.map(([n,s])=>({name:n,val:s.maxS})).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  if(allMaxStreaks.length) cards.push({icon:'🔥',title:'Mayor racha ganadora',winner:allMaxStreaks[0].name,val:`${allMaxStreaks[0].val} victorias consecutivas`,color:'#EF4444'});
 
   // 2. Rey del verano (dic+ene+feb)
   const summerMonths=['12','01','02'];
@@ -3499,10 +3912,22 @@ async function delBrunato(i){
 // ══════════════════════════════════════════
 // EQUIPOS
 // ══════════════════════════════════════════
+let equiposFilter='todo';
+function setEquiposFilter(filter,btn){
+  equiposFilter=filter;
+  document.querySelectorAll('[id^="eqfilter-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  safeRender(()=>renderEquipos(),'renderEquipos');
+}
+
 function renderEquipos(){
   const el=document.getElementById('equipos-content');
   if(!el)return;
-  const ms=DB.matches.filter(m=>m.teams&&m.teams.blanco&&m.teams.blanco.length>0);
+  const allMs=DB.matches.filter(m=>m.teams&&m.teams.blanco&&m.teams.blanco.length>0);
+  let ms;
+  if(equiposFilter==='2025') ms=allMs.filter(m=>m.date.startsWith('2025'));
+  else if(equiposFilter==='2026') ms=allMs.filter(m=>m.date.startsWith('2026'));
+  else ms=allMs;
   if(!ms.length){el.innerHTML='<div class="empty">Sin datos de equipos aún</div>';return;}
 
   const top=['Nico','Gonza','Bauti','Cholo','Batata','Emi','Tony','Pipe',
@@ -3572,6 +3997,196 @@ function renderEquipos(){
   const favDiff=p=>B[p]>N[p]?`${B[p]}B/${N[p]}N`:N[p]>B[p]?`${N[p]}N/${B[p]}B`:`${B[p]}B/${N[p]}N`;
 
   el.innerHTML=`
+  ${(()=>{
+    // Only use matches with resultado
+    const msR=ms.filter(m=>m.resultado);
+    if(!msR.length)return'';
+
+    // HEAD TO HEAD
+    let bW=0,nW=0,empates=0;
+    msR.forEach(m=>{
+      const r=m.resultado.toLowerCase();
+      if(r==='blanco')bW++;
+      else if(r==='negro')nW++;
+      else empates++;
+    });
+    const total=bW+nW+empates;
+    const bPct=Math.round(bW/total*100);
+    const nPct=Math.round(nW/total*100);
+    const ePct=100-bPct-nPct;
+
+    // RACHA ACTUAL blanco/negro
+    const sorted2=[...msR].sort((a,b)=>a.date.localeCompare(b.date));
+    let curBlanco=0,curNegro=0,curEmpate=0;
+    for(let i=sorted2.length-1;i>=0;i--){
+      const r=sorted2[i].resultado.toLowerCase();
+      if(i===sorted2.length-1){
+        if(r==='blanco')curBlanco=1;
+        else if(r==='negro')curNegro=1;
+        else curEmpate=1;
+      } else {
+        const prev=sorted2[i+1].resultado.toLowerCase();
+        if(r===prev){
+          if(r==='blanco')curBlanco++;
+          else if(r==='negro')curNegro++;
+          else curEmpate++;
+        } else break;
+      }
+    }
+    const rachaActual=curBlanco>0?`⚪ Blanco lleva ${curBlanco} ${curBlanco===1?'victoria':'victorias'} seguidas`:
+      curNegro>0?`⚫ Negro lleva ${curNegro} ${curNegro===1?'victoria':'victorias'} seguidas`:
+      `🤝 El último resultado fue empate`;
+
+    // MAS GANADOR Y MAS PERDEDOR
+    const wCount={},lCount={};
+    top.forEach(p=>{wCount[p]=0;lCount[p]=0;});
+    msR.forEach(m=>{
+      const r=m.resultado.toLowerCase();
+      const bl=m.teams.blanco||[];
+      const ng=m.teams.negro||[];
+      bl.forEach(p=>{if(top.includes(p)){if(r==='blanco')wCount[p]++;else if(r==='negro')lCount[p]++;}});
+      ng.forEach(p=>{if(top.includes(p)){if(r==='negro')wCount[p]++;else if(r==='blanco')lCount[p]++;}});
+    });
+    const topW=Object.entries(wCount).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const topL=Object.entries(lCount).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    // DUPLA IMBATIBLE
+    const duoW={},duoP={};
+    msR.forEach(m=>{
+      const r=m.resultado.toLowerCase();
+      [m.teams.blanco||[],m.teams.negro||[]].forEach((team,ti)=>{
+        const won=(ti===0&&r==='blanco')||(ti===1&&r==='negro');
+        const tp=team.filter(p=>top.includes(p));
+        for(let i=0;i<tp.length;i++)for(let j=i+1;j<tp.length;j++){
+          const k=[tp[i],tp[j]].sort().join('|');
+          if(won)duoW[k]=(duoW[k]||0)+1;
+          else duoP[k]=(duoP[k]||0)+1;
+        }
+      });
+    });
+    const duoStats=Object.keys({...duoW,...duoP}).map(k=>{
+      const w=duoW[k]||0,l=duoP[k]||0,t=w+l;
+      return{k,w,l,t,pct:t>0?Math.round(w/t*100):0};
+    }).filter(x=>x.t>=5).sort((a,b)=>b.w-a.w);
+
+    // RACHA GANADORA PERSONAL
+    const personalRacha={};
+    top.forEach(p=>{
+      let max=0,cur=0;
+      sorted2.forEach(m=>{
+        const r=m.resultado.toLowerCase();
+        const bl=m.teams.blanco||[],ng=m.teams.negro||[];
+        if(!bl.includes(p)&&!ng.includes(p))return;
+        const won=(bl.includes(p)&&r==='blanco')||(ng.includes(p)&&r==='negro');
+        if(won){cur++;max=Math.max(max,cur);}else cur=0;
+      });
+      if(max>=3)personalRacha[p]=max;
+    });
+    const rachaPersonalArr=Object.entries(personalRacha).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+    return`
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">⚽ Head to Head histórico</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:${bPct};background:rgba(255,255,255,0.15);border-radius:4px;height:8px"></div>
+        <div style="flex:${ePct};background:rgba(100,116,139,0.4);border-radius:4px;height:8px"></div>
+        <div style="flex:${nPct};background:rgba(30,30,30,0.8);border-radius:4px;height:8px"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+        <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#e2e8f0">${bW}</div>
+          <div style="font-size:10px;color:var(--grey);letter-spacing:1px">⚪ BLANCO</div>
+          <div style="font-size:11px;color:#94a3b8">${bPct}%</div>
+        </div>
+        <div style="background:rgba(100,116,139,0.15);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#94a3b8">${empates}</div>
+          <div style="font-size:10px;color:var(--grey);letter-spacing:1px">🤝 EMPATES</div>
+          <div style="font-size:11px;color:#94a3b8">${ePct}%</div>
+        </div>
+        <div style="background:rgba(0,0,0,0.3);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#94a3b8">${nW}</div>
+          <div style="font-size:10px;color:var(--grey);letter-spacing:1px">⚫ NEGRO</div>
+          <div style="font-size:11px;color:#94a3b8">${nPct}%</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px;border-radius:7px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#4ade80;text-align:center">${rachaActual}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card">
+        <div class="card-title" style="font-size:13px">⚡ Más victorias</div>
+        ${topW.map(([p,v],i)=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${['🥇','🥈','🥉','4.','5.'][i]} ${p}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#4ade80">${v}</div>
+          </div>`).join('')}
+      </div>
+      <div class="card">
+        <div class="card-title" style="font-size:13px">🪦 Más derrotas</div>
+        ${topL.map(([p,v],i)=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border)">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${['🥇','🥈','🥉','4.','5.'][i]} ${p}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#f87171">${v}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    ${duoStats.length?`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">💪 Dupla imbatible</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${duoStats.slice(0,6).map(({k,w,l,t,pct})=>{const[a,b]=k.split('|');return`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:7px;background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.2)">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${a} &amp; ${b}</div>
+            <div style="text-align:right">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#4ade80;line-height:1">${w}V ${l}D</div>
+              <div style="font-size:9px;color:var(--grey)">${pct}% victorias en ${t} partidos</div>
+            </div>
+          </div>`;}).join('')}
+      </div>
+    </div>`:''}
+
+    ${rachaPersonalArr.length?`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">🔥 Mayor racha ganadora personal</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        ${rachaPersonalArr.map(([p,v],i)=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:7px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.15)">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${['🥇','🥈','🥉','4.','5.'][i]} ${p}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#4ade80">${v} seguidas</div>
+          </div>`).join('')}
+      </div>
+    </div>`:''}
+    `;
+  })()}
+
+  ${(()=>{
+    const last5=[...ms].filter(m=>m.resultado).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).reverse();
+    if(!last5.length)return'';
+    return`<div class="card" style="margin-bottom:14px">
+      <div class="card-title">📅 Últimos 5 partidos</div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:10px">
+        ${last5.map(m=>{
+          const r=m.resultado.toLowerCase();
+          const bg=r==='blanco'?'rgba(255,255,255,0.15)':r==='negro'?'rgba(0,0,0,0.5)':'rgba(100,116,139,0.3)';
+          const label=r==='blanco'?'⚪':r==='negro'?'⚫':'🤝';
+          const d=new Date(m.date+'T12:00:00');
+          const ds=d.toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+          return`<div style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;background:${bg};border:1px solid rgba(255,255,255,0.1)">
+            <div style="font-size:20px">${label}</div>
+            <div style="font-size:9px;color:var(--grey);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${ds}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;justify-content:center">
+        ${(()=>{
+          const w=last5.filter(m=>m.resultado.toLowerCase()==='blanco').length;
+          const n=last5.filter(m=>m.resultado.toLowerCase()==='negro').length;
+          const e=last5.filter(m=>m.resultado.toLowerCase()==='empate').length;
+          return`<span style="color:#e2e8f0">⚪ ${w}V</span><span style="color:var(--grey)">·</span><span style="color:#94a3b8">🤝 ${e}E</span><span style="color:var(--grey)">·</span><span style="color:#94a3b8">⚫ ${n}V</span>`;
+        })()}
+      </div>
+    </div>`;
+  })()}
+
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
     <div class="card">
       <div class="card-title" style="font-size:13px">⚪ Equipo favorito</div>
@@ -3828,7 +4443,7 @@ function setWCFilter(f,btn){
 // ══════════════════════════════════════════
 // FAQ
 // ══════════════════════════════════════════
-const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking cae, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. Suma 0.4 puntos y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá GRUN FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno, no desde el inicio del grupo. Si debutaste en el partido 10, tu denominador son los partidos desde ese momento. Jugaste (X) y fuiste a ver (O) cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. Resta 0.5 puntos del ranking cada vez. El badge 💨 queda en el perfil para siempre con el contador de humadas."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 5 o más partidos consecutivos sin faltar.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. Cada vez resta 0.5 puntos.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No suma ni resta, pero mantiene la racha.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
+const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha de victorias puede verse afectada y tu posición en el ranking puede caer. Además queda documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha de victorias. El grupo es inclusivo."], ["¿De dónde salen los resultados de los partidos?", "Los resultados provienen de una fuente primaria verificada de alta confiabilidad. La identidad de la fuente es confidencial por razones de privacidad operativa. Si algún resultado te genera dudas, podés objetarlo con pruebas concretas — capturas, videos, o testimonio de múltiples jugadores. Sin evidencia, el dato registrado prevalece."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá GRUN FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno, solo contando los partidos que efectivamente jugó (X). Ir a ver (O) y SAF no cuentan para el porcentaje. Solo la ausencia total baja el número."], ["¿Qué es la Racha?", "La racha cuenta victorias consecutivas. No se corta si no jugás un martes — solo se corta cuando perdés o empatás. Es decir: podés saltarte partidos y la racha sigue viva."], ["¿Qué es la Máx. Racha?", "Es la mayor cantidad de victorias seguidas que lograste en toda la historia del grupo. Solo aparece en el perfil de cada jugador."], ["¿Qué son %V y %P?", "% de victorias y % de derrotas sobre los partidos con resultado cargado. Solo se muestra para jugadores con 5 o más partidos jugados con resultado — para evitar porcentajes engañosos de quien jugó uno o dos partidos."], ["¿Puedo filtrar el ranking por período?", "Sí. Arriba del ranking hay botones para ver Todo, solo 2025, solo 2026, o los últimos 5/10/15 partidos. Todos los datos de la tabla — puntos, victorias, goles, badges — se recalculan según el período elegido."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 5 o más victorias consecutivas activas.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas en el período filtrado.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas en el período filtrado.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma +2 puntos cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después. Y suma +2 puntos al ranking."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
 
 function renderFAQ(){
   var el=document.getElementById('faq-list');
@@ -3971,5 +4586,111 @@ function showToast(msg,type=''){
 
 </script>
 
+<!-- MODAL NOVEDADES -->
+<div id="modal-novedades" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
+  <div style="background:var(--bg-card);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(59,130,246,0.3);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <!-- Header -->
+    <div style="position:sticky;top:0;background:var(--bg-card);padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0;z-index:1">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--white)">🆕 NOVEDADES</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--teal);letter-spacing:2px;margin-top:2px">ACTUALIZACIÓN · JUNIO 2026</div>
+      </div>
+      <button onclick="document.getElementById('modal-novedades').style.display='none'" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--grey);font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:20px 24px 28px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.7">
+
+      <!-- Intro -->
+      <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#93c5fd;letter-spacing:1px;margin-bottom:6px">RESUMEN GENERAL</div>
+        <p style="margin:0;font-size:13px;color:var(--grey-light)">La plataforma fue actualizada con un nuevo sistema de puntuación basado en resultados deportivos, nuevo cálculo de rachas, estadísticas de equipos por año, mapas de calor ampliados, filtros de período en ranking y múltiples mejoras visuales. La base de datos fue auditada y sincronizada con fuentes primarias verificadas.</p>
+      </div>
+
+      <!-- Sistema de puntos -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">📊 SISTEMA DE PUNTOS</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(74,222,128,0.08);border-radius:6px"><span>🏆 Partido ganado</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#4ade80">+3 pts</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(100,116,139,0.1);border-radius:6px"><span>🤝 Partido empatado</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#94a3b8">+1 pt</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(251,191,36,0.08);border-radius:6px"><span>🥇 Premio Brunato</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fbbf24">+2 pts</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px"><span style="color:#64748b">Partido perdido / Humo / Hincha / SAF</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#475569">0 pts</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Racha -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">🔥 RACHA — NUEVO CÁLCULO</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            <li>La racha ahora cuenta <strong style="color:var(--white)">victorias consecutivas</strong>, no asistencias.</li>
+            <li><strong style="color:#4ade80">No se corta</strong> si no jugás un martes — podés saltarte partidos y la racha sigue viva.</li>
+            <li><strong style="color:#f87171">Se corta</strong> cuando perdés o empatás.</li>
+            <li>La <strong style="color:var(--white)">Máx. Racha</strong> también cambió: es tu mayor cantidad de victorias seguidas históricas.</li>
+            <li>Solo aparecen en el widget de Rachas los jugadores con <strong style="color:var(--white)">5+ partidos jugados</strong> en total.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Ranking -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">🏅 RANKING</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            <li>Nuevas columnas: <strong style="color:var(--white)">V · E · P · %V · %P</strong> — victorias, empates, derrotas y porcentajes (solo con 5+ partidos con resultado)</li>
+            <li>Nuevos badges: <strong style="color:#4ade80">⚡ Máquina</strong> · <strong style="color:#94a3b8">🪦 Lastre</strong> · <strong style="color:#fbbf24">🏆 Brunato ×N</strong></li>
+            <li><strong style="color:var(--white)">Filtro de período</strong> — Todo / 2025 / 2026 / Últimos 5/10/15 partidos. Todos los datos se recalculan según el período.</li>
+            <li>% Asistencia solo cuenta partidos jugados (sin hincha ni SAF)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Equipos -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">👥 SECCIÓN EQUIPOS</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            <li>Filtro <strong style="color:var(--white)">Todo / 2025 / 2026</strong> — todas las stats se recalculan por año</li>
+            <li><strong style="color:var(--white)">Head to Head histórico</strong> con racha actual y barra visual</li>
+            <li><strong style="color:var(--white)">Más victorias / Más derrotas</strong> · <strong style="color:var(--white)">Dupla imbatible</strong> · <strong style="color:var(--white)">Racha ganadora personal</strong></li>
+            <li><strong style="color:var(--white)">Últimos 5 partidos</strong> con barra visual de resultados</li>
+            <li>Badge 🏆 en el equipo ganador de cada partido</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">📊 ESTADÍSTICAS</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            <li>Nueva pestaña <strong style="color:var(--white)">🏆 Mapa Partidos</strong> — calor de resultados (verde=ganó, rojo=perdió) para todos los jugadores</li>
+            <li>Mapa de asistencia ampliado a todos los jugadores</li>
+            <li><strong style="color:var(--white)">Stats Raras</strong> con filtro Todo / 2025 / 2026</li>
+            <li>Evolución del ranking recalculada con el nuevo sistema de puntos</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Resultados -->
+      <div style="margin-bottom:6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--teal);margin-bottom:10px">📋 RESULTADOS DE PARTIDOS</div>
+        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:14px 16px">
+          <p style="margin:0 0 8px;color:var(--grey-light)">Los resultados de los 33 partidos cargados en la plataforma provienen de una <strong style="color:var(--white)">fuente primaria verificada de alta confiabilidad</strong>. La identidad de dicha fuente es confidencial por razones de privacidad operativa.</p>
+          <p style="margin:0;color:var(--grey-light)">Si algún resultado te genera dudas, podés <strong style="color:#fbbf24">objetarlo con pruebas concretas</strong> — capturas, videos, o testimonio de múltiples jugadores presentes. Sin evidencia, el dato registrado prevalece. El sistema no admite apelaciones basadas en recuerdos o percepciones subjetivas.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 24px 20px;border-top:1px solid var(--border);text-align:center">
+      <button onclick="document.getElementById('modal-novedades').style.display='none'" style="background:var(--teal);color:#000;border:none;padding:10px 32px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer">ENTENDIDO ✓</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#475569;margin-top:10px;letter-spacing:1px">ESTE AVISO APARECE HASTA EL 17/06/2026</div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
