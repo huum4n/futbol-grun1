@@ -897,7 +897,13 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     <div class="hero-strip" id="hero-strip"></div>
     <div id="podium-wrap"></div>
     <div class="grid-2">
-      <div class="card"><div class="card-title">🔥 Rachas actuales</div><div class="streak-list" id="streak-list"></div></div>
+      <div class="card">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>⚡ Ranking Profesionalismo</span>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--grey);letter-spacing:1px;font-weight:400">desde 09/06</span>
+        </div>
+        <div id="inicio-prof-ranking"></div>
+      </div>
       <div class="card"><div class="card-title">📅 Último partido</div><div id="last-match"></div></div>
     </div>
     <div class="card">
@@ -2515,15 +2521,24 @@ function renderInicio(stats,sorted,ranking){
       <div class="podium-name">${it[0]}</div>
       <div class="podium-pts">${it[1].played} jugados</div>
     </div>`:'' ).join('')}</div>`;
-  // rachas
-  const topS=ranking.filter(([,s])=>s.curS>0).sort((a,b)=>b[1].curS-a[1].curS).slice(0,6);
-  document.getElementById('streak-list').innerHTML=topS.map(([n,s],i)=>`
-    <div class="streak-item" onclick="openModal('${n}')">
-      <div class="streak-pos">${i+1}</div>
-      <div class="streak-name">${n}</div>
-      ${s.curS>=5?'<div class="sbadge hot">🔥 Hot</div>':'<div class="sbadge ok">✓</div>'}
-      <div class="streak-n">${s.curS}</div>
-    </div>`).join('');
+  // Ranking Profesionalismo top 8
+  const profMatches=sorted.filter(m=>m.date>='2026-06-09');
+  const profEl=document.getElementById('inicio-prof-ranking');
+  if(profEl){
+    if(!profMatches.length){
+      profEl.innerHTML='<div class="empty" style="font-size:12px">Sin partidos del Profesionalismo aún</div>';
+    } else {
+      const{stats:profStats}=getStatsFromMatches(profMatches);
+      const profRanking=getRanking(profStats).slice(0,8);
+      profEl.innerHTML=profRanking.map(([name,s],i)=>`
+        <div class="streak-item" onclick="openModal('${name}')" style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;cursor:pointer">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--grey);width:20px;text-align:center">${i+1}</div>
+          <div style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${name}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--teal)">${s.pts}</div>
+          <div style="font-size:10px;color:var(--grey);font-family:'Barlow Condensed',sans-serif">${s.played}J</div>
+        </div>`).join('');
+    }
+  }
   // ultimo partido
   const last=sorted[sorted.length-1];
   const xp=Object.entries(last.attendance).filter(([,v])=>v==='X');
