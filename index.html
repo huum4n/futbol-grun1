@@ -831,6 +831,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 .badge-maquina{background:rgba(99,255,180,0.15);color:#4ade80;border:1px solid rgba(74,222,128,0.4)}
 .badge-lastre{background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)}
 .badge-brunato{background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.4)}
+.badge-gdo{background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.4)}
 </style>
 </head>
 <body>
@@ -962,7 +963,8 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <th onclick="sortRanking('lossPct')">%P</th>
           <th onclick="sortRanking('goles')">Goles</th>
           <th onclick="sortRanking('mvps')">Brunato</th>
-          <th>Badges</th>
+          <th onclick="sortRanking('gdos')">GDO</th>
+          <th id="rank-badges-th">Badges</th>
         </tr></thead>
         <tbody id="rank-body"></tbody>
       </table>
@@ -1446,6 +1448,10 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
             <input type="text" class="finput" id="np-mvp-frase" placeholder="Su frase de la noche...">
           </div>
           <div class="form-group">
+            <label class="flabel">🧤 Guante de Oro (opcional)</label>
+            <input type="text" class="finput" id="np-gdo" placeholder="Mejor arquero del partido..." list="pl-dl">
+          </div>
+          <div class="form-group">
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
             <input type="text" class="finput" id="np-financista" placeholder="Nombre del jugador (opcional)" list="pl-dl">
           </div>
@@ -1505,6 +1511,10 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
           <div class="form-group" id="edit-frase-group">
             <label class="flabel">Frase o dedicatoria del Brunato</label>
             <input type="text" class="finput" id="edit-mvp-frase" placeholder="Su frase de la noche...">
+          </div>
+          <div class="form-group">
+            <label class="flabel">🧤 Guante de Oro</label>
+            <input type="text" class="finput" id="edit-gdo" placeholder="Mejor arquero del partido..." list="pl-dl">
           </div>
           <div class="form-group">
             <label class="flabel">💰 ¿Quién pagó la cancha?</label>
@@ -1976,7 +1986,8 @@ async function loadDB(){
     attendance:m.attendance||{},mvp:m.mvp,goals:m.goals||{},created_at:m.created_at,
     teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null,
     resultado:m.resultado||null,
-    humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null}));
+    humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null,
+    guante_de_oro:m.guante_de_oro||null}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
   DB._playerPositions={};players.forEach(p=>{if(p.position)DB._playerPositions[p.name]=p.position;});
@@ -2064,7 +2075,7 @@ function getStats(){
   sorted.forEach(m=>Object.keys(m.attendance).forEach(p=>allP.add(p)));
   const stats={};
   allP.forEach(p=>{
-    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0,mvpCount=0;
+    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0,mvpCount=0,gdoCount=0;
     let debut=null,started=false;
     const hist=[];
     sorted.forEach(m=>{
@@ -2086,6 +2097,7 @@ function getStats(){
       else if(v==='O'){watched++;tempS++;maxS=Math.max(maxS,tempS);hist.push('O');}
       else{tempS=0;hist.push('-');}
       if(m.mvp===p){pts+=2;mvpCount++;}
+      if(m.guante_de_oro===p){pts+=1;gdoCount++;}
     });
     let curS=0;
     for(let i=hist.length-1;i>=0;i--){
@@ -2093,13 +2105,31 @@ function getStats(){
       if(hist[i]==='X'||hist[i]==='O'||hist[i]==='SAF'){curS++;}
       else break;
     }
+    // Win streak
+    let winStreak=0,maxWinStreak=0,tempWin=0;
+    for(let i=sorted.length-1;i>=0;i--){
+      const m=sorted[i];if(m.attendance[p]!=='X')continue;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won)winStreak++;else if(lost||res==='empate')break;
+    }
+    sorted.forEach(m=>{
+      if(m.attendance[p]!=='X')return;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won){tempWin++;maxWinStreak=Math.max(maxWinStreak,tempWin);}else if(lost||res==='empate')tempWin=0;
+    });
     const totalSince=hist.filter(h=>h!=='b').length;
     const pct=totalSince>0?Math.round(played/totalSince*100):0;
     const pctAll=Math.round(played/sorted.length*100);
     const s25=sorted.filter(m=>m.date.startsWith('2025'));
     const s26=sorted.filter(m=>m.date.startsWith('2026'));
     const calcYr=ms=>{const rel=ms.filter(m=>m.date>=(stats[p]?.debut||'9999'));if(!rel.length)return null;const x=rel.filter(m=>m.attendance[p]==='X'||m.attendance[p]==='O').length;return Math.round(x/rel.length*100);};
-    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:calcYr(s25),pct26:calcYr(s26),humoCount,safCount,mvpCount};
+    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,winStreak,maxWinStreak,hist,pct25:calcYr(s25),pct26:calcYr(s26),humoCount,safCount,mvpCount,gdoCount};
   });
   // Financista counts from matches (dynamic)
   const finFromMatches={};
@@ -2123,7 +2153,7 @@ function getBadges(name,stats,rank){
   // Titular: top 16 del ranking
   if(rank>=1&&rank<=16) b.push({cls:'titular',lbl:'Titular'});
   // En racha
-  if(s.curS>=5) b.push({cls:'racha',lbl:'🔥 Racha'});
+  if((s.winStreak||0)>=3) b.push({cls:'racha',lbl:'🔥 Racha'});
   // Fantasma
   if(s.played+s.watched<=2) b.push({cls:'fantasma',lbl:'Fantasma'});
   // Hincha
@@ -2139,6 +2169,7 @@ function getBadges(name,stats,rank){
   if(s.safCount>0) b.push({cls:'badge-saf',lbl:'🚑 ×'+s.safCount});
   // Brunato badge
   if(s.mvpCount>0) b.push({cls:'badge-brunato',lbl:'🏆 Brunato ×'+s.mvpCount});
+  if(s.gdoCount>0) b.push({cls:'badge-gdo',lbl:'🧤 GDO ×'+s.gdoCount});
   // Inamovible: nunca humo ni saf + top 16
   if(s.humoCount===0&&s.safCount===0&&rank>=1&&rank<=16) b.push({cls:'badge-ina',lbl:'🧱 Inamovible'});
   // Goleador: top 3
@@ -2202,7 +2233,7 @@ function getBadgesFiltered(name,stats,rank,matches){
   const inFirst3=sorted.slice(0,3).some(m=>m.attendance[name]);
   if(inFirst3&&s.pctAll>50) b.push({cls:'fundador',lbl:'Fundador'});
   if(rank>=1&&rank<=16) b.push({cls:'titular',lbl:'Titular'});
-  if(s.curS>=5) b.push({cls:'racha',lbl:'🔥 Racha'});
+  if((s.winStreak||0)>=3) b.push({cls:'racha',lbl:'🔥 Racha'});
   if(s.played+s.watched<=2) b.push({cls:'fantasma',lbl:'Fantasma'});
   if(s.watched>0||s.safCount>0) b.push({cls:'hincha',lbl:'Hincha'});
   if(name==='Kuza'||name==='Batata') b.unshift({cls:'badge-dt',lbl:'📋 DT'});
@@ -2211,6 +2242,7 @@ function getBadgesFiltered(name,stats,rank,matches){
   if(s.humoCount>0) b.push({cls:'badge-humo',lbl:'💨 ×'+s.humoCount});
   if(s.safCount>0) b.push({cls:'badge-saf',lbl:'🚑 ×'+s.safCount});
   if(s.mvpCount>0) b.push({cls:'badge-brunato',lbl:'🏆 Brunato ×'+s.mvpCount});
+  if(s.gdoCount>0) b.push({cls:'badge-gdo',lbl:'🧤 GDO ×'+s.gdoCount});
   if(s.humoCount===0&&s.safCount===0&&rank>=1&&rank<=16) b.push({cls:'badge-ina',lbl:'🧱 Inamovible'});
   // Goleador — filtered
   const allGoals={};
@@ -2550,7 +2582,8 @@ function renderInicio(stats,sorted,ranking){
       <div class="lm-date">${ds}</div>
       <span class="tipo-tag">${tipoStr} · ${last.n} jugadores</span>
     </div>
-    ${last.mvp?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:9px">⭐ MVP: ${last.mvp}</div>`:''}
+    ${last.mvp?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:4px">⭐ MVP: ${last.mvp}</div>`:''}
+    ${last.guante_de_oro?`<div style="color:#22d3ee;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:9px">🧤 Guante de Oro: ${last.guante_de_oro}</div>`:''}
     <div class="player-chips">
       ${xp.map(([n])=>`<div class="chip" onclick="openModal('${n}')">${n}</div>`).join('')}
       ${op.map(([n])=>`<div class="chip o" onclick="openModal('${n}')">${n} 👁️</div>`).join('')}
@@ -2593,7 +2626,7 @@ function getStatsFromMatches(sorted){
   sorted.forEach(m=>Object.keys(m.attendance).forEach(p=>allP.add(p)));
   const stats={};
   allP.forEach(p=>{
-    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0,mvpCount=0;
+    let pts=0,played=0,watched=0,tempS=0,maxS=0,humoCount=0,safCount=0,mvpCount=0,gdoCount=0;
     let debut=null,started=false;
     const hist=[];
     sorted.forEach(m=>{
@@ -2615,19 +2648,31 @@ function getStatsFromMatches(sorted){
       else if(v==='O'){watched++;tempS++;maxS=Math.max(maxS,tempS);hist.push('O');}
       else{tempS=0;hist.push('-');}
       if(m.mvp===p){pts+=2;mvpCount++;}
+      if(m.guante_de_oro===p){pts+=1;gdoCount++;}
     });
-    let curS=0;
-    for(let i=hist.length-1;i>=0;i--){
-      if(hist[i]==='b')break;
-      if(hist[i]==='X'||hist[i]==='O'||hist[i]==='SAF'){curS++;}
-      else break;
+    let winStreak=0,maxWinStreak=0,tempWin=0;
+    for(let i=sorted.length-1;i>=0;i--){
+      const m=sorted[i];if(m.attendance[p]!=='X')continue;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won)winStreak++;else if(lost||res==='empate')break;
     }
+    sorted.forEach(m=>{
+      if(m.attendance[p]!=='X')return;
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+      const won=(bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro');
+      const lost=(bl.includes(p)&&res==='negro')||(ng.includes(p)&&res==='blanco');
+      if(won){tempWin++;maxWinStreak=Math.max(maxWinStreak,tempWin);}else if(lost||res==='empate')tempWin=0;
+    });
     const totalSince=hist.filter(h=>h!=='b').length;
     const pct=totalSince>0?Math.round(played/totalSince*100):0;
     const pctAll=Math.round(played/sorted.length*100);
     const finFromMatches={};
     sorted.forEach(function(m){if(m.financista)finFromMatches[m.financista]=(finFromMatches[m.financista]||0)+1;});
-    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS,maxS,hist,pct25:null,pct26:null,humoCount,safCount,mvpCount,finDynamic:finFromMatches[p]||0};
+    stats[p]={pts:Math.round(pts*10)/10,played,watched,pct,pctAll,debut,curS:winStreak,maxS:maxWinStreak,winStreak,maxWinStreak,hist,pct25:null,pct26:null,humoCount,safCount,mvpCount,gdoCount,finDynamic:finFromMatches[p]||0};
   });
   return{stats,sorted};
 }
@@ -2644,11 +2689,12 @@ function renderRanking(stats,ranking){
   else if(rankFilter==='last15') filteredMatches=allSorted.slice(-15);
   else filteredMatches=allSorted;
 
-  const goalMap={};const mvpMap={};
+  const goalMap={};const mvpMap={};const gdoMap={};
   const wMap={};const eMap={};const lMap={};
   filteredMatches.forEach(function(m){
     Object.entries(m.goals||{}).forEach(function(e){if(e[1]>0)goalMap[e[0]]=(goalMap[e[0]]||0)+e[1];});
     if(m.mvp)mvpMap[m.mvp]=(mvpMap[m.mvp]||0)+1;
+    if(m.guante_de_oro)gdoMap[m.guante_de_oro]=(gdoMap[m.guante_de_oro]||0)+1;
     const res=(m.resultado||'').toLowerCase();
     if(!res)return;
     const bl=(m.teams&&m.teams.blanco)||[];
@@ -2669,11 +2715,11 @@ function renderRanking(stats,ranking){
     const total=w+e+l;
     return {
       pos:i+1,name,pts:s.pts,played:s.played,watched:s.watched,
-      pct:s.pct,streak:s.curS,maxStreak:s.maxS,
+      pct:s.pct,streak:s.winStreak||0,maxStreak:s.maxWinStreak||0,
       wins:w,draws:e,losses:l,
       winPct:total>=5?Math.round(w/total*100):null,
       lossPct:total>=5?Math.round(l/total*100):null,
-      goles:goalMap[name]||0,mvps:mvpMap[name]||0,
+      goles:goalMap[name]||0,mvps:mvpMap[name]||0,gdos:gdoMap[name]||0,
       badges:getBadgesFiltered(name,stats,i+1,filteredMatches)
     };
   });
@@ -2681,7 +2727,7 @@ function renderRanking(stats,ranking){
 }
 function drawRankTable(data){
   const showBadges = rankFilter==='todo';
-  const badgeHeader = document.querySelector('#rank-table th:last-child');
+  const badgeHeader = document.getElementById('rank-badges-th');
   if(badgeHeader) badgeHeader.style.display = showBadges?'':'none';
   document.getElementById('rank-body').innerHTML=data.map(r=>`
     <tr onclick="openModal('${r.name}')">
@@ -2698,6 +2744,7 @@ function drawRankTable(data){
       <td style="color:#f87171;font-weight:600">${r.lossPct!==null?r.lossPct+'%':'—'}</td>
       <td>${r.goles>0?'⚽ '+r.goles:'—'}</td>
       <td>${r.mvps>0?'🏆 '+r.mvps:'—'}</td>
+      <td>${r.gdos>0?'🧤 '+r.gdos:'—'}</td>
       <td style="display:${showBadges?'':'none'}"><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
     </tr>`).join('');
 }
@@ -2743,6 +2790,7 @@ function renderPartidos(sorted){
         ${op.length?`<div class="player-chips" style="margin-bottom:4px">${op.map(([n])=>{const isSAF=m.saf&&m.saf.includes(n);return`<div class="chip o" onclick="event.stopPropagation();openModal('${n}')">${n} ${isSAF?'🚑':'👁️'}</div>`;}).join('')}</div>`:''}
         ${m.humo&&m.humo.length?`<div class="player-chips" style="margin-bottom:4px">${m.humo.map(n=>`<div class="chip" style="background:rgba(148,163,184,0.15);color:#94a3b8" onclick="event.stopPropagation();openModal('${n}')">${n} 💨</div>`).join('')}</div>`:''}
         ${m.financista?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#86efac;margin-top:8px">💰 Pagó la cancha: ${m.financista}</div>`:''}
+        ${m.guante_de_oro?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#22d3ee;margin-top:4px">🧤 Guante de Oro: ${m.guante_de_oro}</div>`:''}
         ${goals.length?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px;margin-bottom:5px">⚽ GOLES</div><div class="player-chips">${goals.map(([n,g])=>`<div class="chip">${n}: ${g}</div>`).join('')}</div>`:''}
       </div>
     </div>`;
@@ -2760,7 +2808,7 @@ function renderJugadores(stats,ranking){
 }
 function drawPlayersGrid(data){
   document.getElementById('players-grid').innerHTML=data.map(({name,s,badges=[]})=>{
-    const c=s.curS;
+    const c=s.winStreak||0;
     const col=c>=5?'#FCA5A5':c>0?'#86EFAC':'var(--grey)';
     const bg=c>=5?'rgba(239,68,68,0.12)':c>0?'rgba(34,197,94,0.1)':'rgba(255,255,255,0.03)';
     const bdgHtml=badges.length?`<div class="brow" style="margin-top:6px;justify-content:center">${badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div>`:'';
@@ -2916,15 +2964,26 @@ function openModal(name){
   const pos=ranking.findIndex(([n])=>n===name)+1;
   const badges=getBadges(name,stats,pos);
   const debutStr=s.debut?new Date(s.debut+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—';
-  const cells=s.hist.map((h,i)=>{
-    const m=sorted[i];
+  const cells=sorted.map((m,i)=>{
+    const h=s.hist[i];
     const tip=m?m.date:'';
-    if(h==='b')return`<div class="hm before" title="${tip}"></div>`;
-    if(h==='X')return`<div class="hm played" title="${tip} ✓"></div>`;
-    if(h==='O')return`<div class="hm watched" title="${tip} 👁️"></div>`;
-    if(h==='SAF')return`<div class="hm" style="background:rgba(239,68,68,0.35)" title="${tip} 🚑"></div>`;
+    const v=m?m.attendance[name]:'';
+    const res=(m&&m.resultado||'').toLowerCase();
+    const bl=(m&&m.teams&&m.teams.blanco)||[];
+    const ng=(m&&m.teams&&m.teams.negro)||[];
+    if(!h||h==='b')return`<div class="hm before" title="${tip}"></div>`;
+    if(h==='-')return`<div class="hm absent" title="${tip} ✗"></div>`;
     if(h==='H')return`<div class="hm" style="background:rgba(148,163,184,0.2)" title="${tip} 💨"></div>`;
-    return`<div class="hm absent" title="${tip} ✗"></div>`;
+    if(h==='O'||h==='SAF'){return`<div class="hm" style="background:rgba(59,130,246,0.4)" title="${tip} ${h==='SAF'?'🚑':'👁️'}"></div>`;}
+    if(h==='X'){
+      if(!res)return`<div class="hm played" title="${tip} ✓"></div>`;
+      const won=(bl.includes(name)&&res==='blanco')||(ng.includes(name)&&res==='negro');
+      const drew=res==='empate';
+      if(won)return`<div class="hm" style="background:rgba(74,222,128,0.75)" title="${tip} ✓ Ganó"></div>`;
+      if(drew)return`<div class="hm" style="background:rgba(100,116,139,0.55)" title="${tip} = Empató"></div>`;
+      return`<div class="hm" style="background:rgba(239,68,68,0.6)" title="${tip} ✗ Perdió"></div>`;
+    }
+    return`<div class="hm absent" title="${tip}"></div>`;
   }).join('');
   const position=(DB._playerPositions&&DB._playerPositions[name])||null;
   document.getElementById('modal-content').innerHTML=`
@@ -2938,14 +2997,17 @@ function openModal(name){
       <div class="ms"><div class="n">${s.played}</div><div class="l">Jugó</div></div>
       <div class="ms"><div class="n">${s.watched}</div><div class="l">Fue a ver</div></div>
       <div class="ms"><div class="n">${s.pct}%</div><div class="l">Asistencia</div></div>
-      <div class="ms"><div class="n" style="color:${s.curS>0?'#86EFAC':'var(--grey)'}">${s.curS}</div><div class="l">Racha actual</div></div>
-      <div class="ms"><div class="n">${s.maxS}</div><div class="l">Racha máx.</div></div>
+      <div class="ms"><div class="n" style="color:${s.curS>0?'#86EFAC':'var(--grey)'}">${s.curS}</div><div class="l">Racha asis.</div></div>
+      <div class="ms"><div class="n" style="color:${s.winStreak>0?'#4ade80':'var(--grey)'}">${s.winStreak||0}</div><div class="l">Racha vict.</div></div>
+      <div class="ms"><div class="n">${s.maxWinStreak||0}</div><div class="l">Máx. vict.</div></div>
     </div>
-    <div class="card-title" style="margin-top:16px">Historial de presencias</div>
+    <div class="card-title" style="margin-top:16px">Historial de partidos</div>
     <div class="heatmap">${cells}</div>
     <div class="hm-legend">
-      <span><span class="hm-dot" style="background:var(--blue-mid)"></span>Jugó</span>
-      <span><span class="hm-dot" style="background:var(--teal);opacity:0.7"></span>Fue a ver</span>
+      <span><span class="hm-dot" style="background:rgba(74,222,128,0.75)"></span>Ganó</span>
+      <span><span class="hm-dot" style="background:rgba(100,116,139,0.55)"></span>Empató</span>
+      <span><span class="hm-dot" style="background:rgba(239,68,68,0.6)"></span>Perdió</span>
+      <span><span class="hm-dot" style="background:rgba(59,130,246,0.4)"></span>Fue a ver</span>
       <span><span class="hm-dot" style="background:rgba(255,255,255,0.05)"></span>Faltó</span>
     </div>
     <div class="card-title">Asistencia por año</div>
@@ -2956,11 +3018,13 @@ function openModal(name){
     ${(()=>{
       const mAwards=DB.brunato.awards.filter(a=>a.winner===name);
       const mMVPs=[...DB.matches].filter(m=>m.mvp===name);
-      if(!mAwards.length&&!mMVPs.length)return'';
+      const mGDOs=[...DB.matches].filter(m=>m.guante_de_oro===name);
+      if(!mAwards.length&&!mMVPs.length&&!mGDOs.length)return'';
       const lines=[];
       mAwards.forEach(a=>lines.push(`<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)"><span style="font-size:18px">🏆</span><div><div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#F59E0B;letter-spacing:1px">${a.title}</div><div style="font-size:12px;font-style:italic;color:#FCD34D">${a.reason||''}</div></div></div>`));
       if(mMVPs.length)lines.push(`<div style="padding:8px 12px;border-radius:7px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.2)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#F59E0B;margin-bottom:4px">🎖️ BRUNATOS DE LA FECHA (${mMVPs.length})</div>${mMVPs.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>{const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});return`<div style="font-size:12px;color:#FCD34D;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🏆 ${ds}</div>`;}).join('')}</div>`);
-      return`<div class="card-title" style="margin-top:20px;color:#F59E0B">🏆 Premios Brunato</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${lines.join('')}</div>`;
+      if(mGDOs.length)lines.push(`<div style="padding:8px 12px;border-radius:7px;background:rgba(34,211,238,0.07);border:1px solid rgba(34,211,238,0.2)"><div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#22d3ee;margin-bottom:4px">🧤 GUANTES DE ORO (${mGDOs.length})</div>${mGDOs.sort((a,b)=>a.date.localeCompare(b.date)).map(m=>{const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});return`<div style="font-size:12px;color:#67e8f9;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🧤 ${ds}</div>`;}).join('')}</div>`);
+      return`<div class="card-title" style="margin-top:20px;color:#F59E0B">🏆 Premios</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">${lines.join('')}</div>`;
     })()}
     ${(()=>{const pf=DB.frases.filter(f=>f.nick===name);return pf.length?`<div class="card-title" style="margin-top:20px">💬 Sus frases icónicas</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${pf.map(f=>`<div style="border-left:2px solid var(--teal);padding:8px 12px;background:rgba(20,184,166,0.05);border-radius:0 6px 6px 0"><div style="font-style:italic;font-size:13px;color:var(--text)">"${f.text}"</div><div style="font-size:11px;color:var(--grey);margin-top:4px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${f.date||''}</div></div>`).join('')}</div>`:''})()}
     ${(()=>{
@@ -2986,7 +3050,8 @@ function openModal(name){
 
       // ── HISTORIA ─────────────────────────────────────────────────────────
       const allAppearances=DB.matches.filter(function(m){
-        return m.attendance[name]||( m.humo&&m.humo.includes(name))||(m.saf&&m.saf.includes(name));
+        const v=m.attendance[name];
+        return v==='X'||v==='B'||v==='N';
       }).sort((a,b)=>a.date.localeCompare(b.date));
       const lastMatch=allAppearances.length?allAppearances[allAppearances.length-1]:null;
       const lastStr=lastMatch?new Date(lastMatch.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'}):'—';
@@ -3274,6 +3339,7 @@ function resetNewMatch(){
   document.getElementById('np-date').value='';
   document.getElementById('np-mvp').value='';
     document.getElementById('np-financista').value='';
+  if(document.getElementById('np-gdo'))document.getElementById('np-gdo').value='';
   document.getElementById('np-type').value='futbol8';
   resetResultado('np');
   updateGoalsList('np-goals-list',{});
@@ -3296,6 +3362,7 @@ async function saveNewMatch(){
   const mvp=document.getElementById('np-mvp').value.trim()||null;
   const mvp_frase=document.getElementById('np-mvp-frase')?document.getElementById('np-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('np-financista').value.trim()||null;
+  const guante_de_oro=document.getElementById('np-gdo')?document.getElementById('np-gdo').value.trim()||null:null;
   const resultado=document.getElementById('np-resultado').value||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
@@ -3310,8 +3377,8 @@ async function saveNewMatch(){
   const goals=getGoalsFromUI(psState);
   showToast('Guardando...','');
   try{
-    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
-    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:humo_list,saf:saf_list});
+    const inserted=await sbPost('matches',{date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:humo_list.length?humo_list:null,saf:saf_list.length?saf_list:null});
+    DB.matches.push({_id:inserted[0].id,date,n:xCount,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:humo_list,saf:saf_list});
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();
     renderAdminMatchList();
@@ -3347,6 +3414,7 @@ function openEditMatch(idx){
   var efg=document.getElementById('edit-frase-group');
   if(efg)efg.style.display=m.mvp?'block':'none';
   document.getElementById('edit-financista').value=m.financista||'';
+  if(document.getElementById('edit-gdo'))document.getElementById('edit-gdo').value=m.guante_de_oro||'';
   if(m.resultado)setResultado('edit',m.resultado);else resetResultado('edit');
   epsState={};
   const mTeams=m.teams||{blanco:[],negro:[]};
@@ -3383,6 +3451,7 @@ async function saveEditMatch(){
   const mvp=document.getElementById('edit-mvp').value.trim()||null;
   const mvp_frase=document.getElementById('edit-mvp-frase')?document.getElementById('edit-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('edit-financista').value.trim()||null;
+  const guante_de_oro=document.getElementById('edit-gdo')?document.getElementById('edit-gdo').value.trim()||null:null;
   const resultado=document.getElementById('edit-resultado').value||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
@@ -3397,8 +3466,8 @@ async function saveEditMatch(){
   const goals=getGoalsFromUI(epsState);
   const matchId=DB.matches[idx]._id;
   try{
-    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
-    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,humo:e_humo,saf:e_saf};
+    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
+    DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:e_humo,saf:e_saf};
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();renderAdminMatchList();backToList();
     showToast('Partido actualizado ✓');
@@ -4096,6 +4165,12 @@ function renderWeirdStats(){
   if(humoRanking.length>0){
     const topHumo=humoRanking[0];
     cards.push({icon:'💨',title:'El más Humo',winner:topHumo[0],val:topHumo[1].humoCount+'x',color:'#94a3b8'});
+  }
+  // GDO — más guantes de oro
+  const gdoRanking=Object.entries(stats).filter(function(e){return(e[1].gdoCount||0)>0;}).sort(function(a,b){return b[1].gdoCount-a[1].gdoCount;});
+  if(gdoRanking.length>0){
+    const topGDO=gdoRanking[0];
+    cards.push({icon:'🧤',title:'El Guardavallas',winner:topGDO[0],val:topGDO[1].gdoCount+' Guante'+(topGDO[1].gdoCount>1?'s de Oro':' de Oro'),color:'#22d3ee'});
   }
 
   // 18. Rey del podio — más apariciones en top 3 mensual
@@ -4819,7 +4894,7 @@ function setWCFilter(f,btn){
 // ══════════════════════════════════════════
 // FAQ
 // ══════════════════════════════════════════
-const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 5 o más partidos consecutivos sin faltar.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
+const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. Ganaste el Guante de Oro +1 punto. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 3 o más victorias consecutivas activas. No se pierde si no jugás, solo si perdés o empatás.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#22d3ee'>🧤 GDO ×N</strong> — Ganó el Guante de Oro N veces. El mejor arquero del partido. Suma +1 pt cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
 
 function renderFAQ(){
   var el=document.getElementById('faq-list');
@@ -4976,6 +5051,19 @@ function showToast(msg,type=''){
 
     <!-- Content -->
     <div style="padding:20px 24px 28px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.7">
+
+      <!-- GDO -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#22d3ee;margin-bottom:10px">🧤 GUANTE DE ORO</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <p style="margin:0 0 8px">Nuevo premio por partido, igual que el Brunato. Lo elige el Admin y se asigna al mejor arquero de la noche.</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:rgba(34,211,238,0.08);border-radius:6px">
+            <span>🧤 Guante de Oro</span>
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#22d3ee">+1 pt</span>
+          </div>
+          <p style="margin:8px 0 0;font-size:12px;color:var(--grey)">Aparece en el perfil de cada jugador, en la columna GDO del ranking, en cada partido y en las Stats Raras. El 09/06/2026 fue para <strong style="color:#22d3ee">Toro</strong> 🦁</p>
+        </div>
+      </div>
 
       <!-- Comparador -->
       <div style="margin-bottom:18px">
