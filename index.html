@@ -926,9 +926,11 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 
   <div class="section" id="s-ranking">
     <div class="section-title" style="color:#EF4444">RANKING</div>
-    <div class="section-sub" id="rank-sub">Por puntos totales · <span id="rank-period-label">Todos los partidos</span></div>
+    <div class="section-sub" id="rank-sub">Por puntos totales · <span id="rank-period-label">Histórico — todos los partidos</span></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <button class="atab active" id="rfilter-todo" onclick="setRankFilter('todo',this)">📊 Todo</button>
+      <button class="atab active" id="rfilter-todo" onclick="setRankFilter('todo',this)">📊 Histórico</button>
+      <button class="atab" id="rfilter-amateurismo" onclick="setRankFilter('amateurismo',this)">🎽 Amateurismo</button>
+      <button class="atab" id="rfilter-profesionalismo" onclick="setRankFilter('profesionalismo',this)">⚡ Profesionalismo</button>
       <button class="atab" id="rfilter-2025" onclick="setRankFilter('2025',this)">2025</button>
       <button class="atab" id="rfilter-2026" onclick="setRankFilter('2026',this)">2026</button>
       <button class="atab" id="rfilter-last5" onclick="setRankFilter('last5',this)">Últimos 5</button>
@@ -996,8 +998,31 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
   <div class="section" id="s-jugadores">
     <div class="section-title">JUGADORES</div>
     <div class="section-sub">Todos los que pasaron por el grupo</div>
-    <input class="search-input" id="players-search" placeholder="Buscar..." oninput="filterPlayers()" style="margin-bottom:18px;width:220px">
-    <div class="players-grid" id="players-grid"></div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <button class="atab active" id="jtab-grilla" onclick="jugadoresTab('grilla',this)">👥 Grilla</button>
+      <button class="atab" id="jtab-comparador" onclick="jugadoresTab('comparador',this)">⚡ Comparador</button>
+    </div>
+    <div id="jpanel-grilla">
+      <input class="search-input" id="players-search" placeholder="Buscar..." oninput="filterPlayers()" style="margin-bottom:18px;width:220px">
+      <div class="players-grid" id="players-grid"></div>
+    </div>
+    <div id="jpanel-comparador" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--grey);letter-spacing:2px;margin-bottom:6px">JUGADOR 1</div>
+          <select id="cmp-p1" onchange="renderComparador()" style="width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--white);padding:8px 12px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700">
+            <option value="">— Elegir —</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--grey);letter-spacing:2px;margin-bottom:6px">JUGADOR 2</div>
+          <select id="cmp-p2" onchange="renderComparador()" style="width:100%;background:var(--bg-card);border:1px solid var(--border);color:var(--white);padding:8px 12px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700">
+            <option value="">— Elegir —</option>
+          </select>
+        </div>
+      </div>
+      <div id="comparador-result"></div>
+    </div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--white);margin-bottom:3px">🏆 BRUNATO S.A.</div>
@@ -1948,6 +1973,7 @@ async function loadDB(){
     humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
+  DB._playerPositions={};players.forEach(p=>{if(p.position)DB._playerPositions[p.name]=p.position;});
   DB.frases=frases.map(f=>({_id:f.id,text:f.text,author:f.author,date:f.date_str,nick:f.nick,created_at:f.created_at}));
   DB.brunato.awards=awards.map(a=>({_id:a.id,id:a.id,type:a.award_type,season:a.season,
     date:a.date_str,winner:a.winner,title:a.title,reason:a.reason,icon:a.icon||'🏆'}));
@@ -1962,20 +1988,26 @@ async function loadDB(){
 
 
 // AUTH
-const PW_VIEW = 'brunato';
-const PW_ADMIN = 'admin2029';
+const PW_VIEW_H = '61419f3b79812f90f5c564728fb5540e8d69d6ac1d95ef5103643d86d986c1f1';
+const PW_ADMIN_H = 'dc2db0bf8571a8006e3b10d6bb79db5a1cb8dbc23d1f3bae6cb87784c8ffd32b';
 
-function doLogin(){
+async function hashStr(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function doLogin(){
   const v = document.getElementById('li').value;
-  if(v===PW_VIEW||v===PW_ADMIN){
+  const h = await hashStr(v);
+  if(h===PW_VIEW_H||h===PW_ADMIN_H){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
+    if(h===PW_ADMIN_H) window._isAdmin=true;
     initApp();
-    // Mostrar novedades si no expiró
-    const expiry = new Date('2026-06-17T23:59:59');
+    const expiry = new Date('2026-06-22T23:59:59');
     if(new Date() <= expiry){
       setTimeout(()=>{
-        document.getElementById('modal-novedades').style.display='flex';
+        document.getElementById('modal-novedades2').style.display='flex';
       }, 800);
     }
   } else {
@@ -1984,8 +2016,10 @@ function doLogin(){
 }
 document.getElementById('li').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 
-function unlockAdmin(){
-  if(document.getElementById('apw').value===PW_ADMIN){
+async function unlockAdmin(){
+  const v=document.getElementById('apw').value;
+  const h=await hashStr(v);
+  if(h===PW_ADMIN_H){
     document.getElementById('admin-lock').style.display='none';
     document.getElementById('admin-content').style.display='block';
     renderAdminMatchList();
@@ -2517,7 +2551,7 @@ function setRankFilter(filter, btn){
   rankFilter=filter;
   document.querySelectorAll('[id^="rfilter-"]').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const labels={'todo':'Todos los partidos','2025':'Temporada 2025','2026':'Temporada 2026','last5':'Últimos 5 partidos','last10':'Últimos 10 partidos','last15':'Últimos 15 partidos'};
+  const labels={'todo':'Histórico — todos los partidos','2025':'Temporada 2025','2026':'Temporada 2026','last5':'Últimos 5 partidos','last10':'Últimos 10 partidos','last15':'Últimos 15 partidos','amateurismo':'Era Amateurismo (hasta 02/06/2026)','profesionalismo':'Era Profesionalismo (desde 09/06/2026)'};
   const el=document.getElementById('rank-period-label');
   if(el)el.textContent=labels[filter]||'';
   const {stats}=getStatsFiltered();
@@ -2530,6 +2564,8 @@ function getStatsFiltered(){
   let filtered;
   if(rankFilter==='2025') filtered=allSorted.filter(m=>m.date.startsWith('2025'));
   else if(rankFilter==='2026') filtered=allSorted.filter(m=>m.date.startsWith('2026'));
+  else if(rankFilter==='amateurismo') filtered=allSorted.filter(m=>m.date<='2026-06-02');
+  else if(rankFilter==='profesionalismo') filtered=allSorted.filter(m=>m.date>='2026-06-09');
   else if(rankFilter==='last5') filtered=allSorted.slice(-5);
   else if(rankFilter==='last10') filtered=allSorted.slice(-10);
   else if(rankFilter==='last15') filtered=allSorted.slice(-15);
@@ -2586,6 +2622,8 @@ function renderRanking(stats,ranking){
   let filteredMatches;
   if(rankFilter==='2025') filteredMatches=allSorted.filter(m=>m.date.startsWith('2025'));
   else if(rankFilter==='2026') filteredMatches=allSorted.filter(m=>m.date.startsWith('2026'));
+  else if(rankFilter==='amateurismo') filteredMatches=allSorted.filter(m=>m.date<='2026-06-02');
+  else if(rankFilter==='profesionalismo') filteredMatches=allSorted.filter(m=>m.date>='2026-06-09');
   else if(rankFilter==='last5') filteredMatches=allSorted.slice(-5);
   else if(rankFilter==='last10') filteredMatches=allSorted.slice(-10);
   else if(rankFilter==='last15') filteredMatches=allSorted.slice(-15);
@@ -2627,6 +2665,9 @@ function renderRanking(stats,ranking){
   drawRankTable(rankData);
 }
 function drawRankTable(data){
+  const showBadges = rankFilter==='todo';
+  const badgeHeader = document.querySelector('#rank-table th:last-child');
+  if(badgeHeader) badgeHeader.style.display = showBadges?'':'none';
   document.getElementById('rank-body').innerHTML=data.map(r=>`
     <tr onclick="openModal('${r.name}')">
       <td class="rk-pos ${r.pos===1?'g1':r.pos===2?'g2':r.pos===3?'g3':''}">${r.pos}</td>
@@ -2642,7 +2683,7 @@ function drawRankTable(data){
       <td style="color:#f87171;font-weight:600">${r.lossPct!==null?r.lossPct+'%':'—'}</td>
       <td>${r.goles>0?'⚽ '+r.goles:'—'}</td>
       <td>${r.mvps>0?'🏆 '+r.mvps:'—'}</td>
-      <td><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
+      <td style="display:${showBadges?'':'none'}"><div class="brow">${r.badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div></td>
     </tr>`).join('');
 }
 function filterRanking(){
@@ -2717,6 +2758,135 @@ function drawPlayersGrid(data){
     </div>`;
   }).join('');
 }
+function jugadoresTab(id,btn){
+  document.querySelectorAll('[id^="jtab-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('jpanel-grilla').style.display=id==='grilla'?'':'none';
+  document.getElementById('jpanel-comparador').style.display=id==='comparador'?'':'none';
+  if(id==='comparador')initComparador();
+}
+function initComparador(){
+  const s1=document.getElementById('cmp-p1');
+  const s2=document.getElementById('cmp-p2');
+  if(s1.options.length>1)return;
+  const{stats}=getStats();
+  const ranking=getRanking(stats);
+  ranking.forEach(([name])=>{
+    [s1,s2].forEach(sel=>{const o=document.createElement('option');o.value=name;o.textContent=name;sel.appendChild(o);});
+  });
+}
+function renderComparador(){
+  const p1=document.getElementById('cmp-p1').value;
+  const p2=document.getElementById('cmp-p2').value;
+  const el=document.getElementById('comparador-result');
+  if(!p1||!p2){el.innerHTML='';return;}
+  if(p1===p2){el.innerHTML='<div class="empty">Elegí dos jugadores distintos</div>';return;}
+  const{stats,sorted}=getStats();
+  const ranking=getRanking(stats);
+  const s1=stats[p1],s2=stats[p2];
+  if(!s1||!s2)return;
+  const pos1=ranking.findIndex(([n])=>n===p1)+1;
+  const pos2=ranking.findIndex(([n])=>n===p2)+1;
+  const badges1=getBadgesFiltered(p1,stats,pos1,sorted);
+  const badges2=getBadgesFiltered(p2,stats,pos2,sorted);
+  const wMap={},lMap={},eMap={};
+  sorted.forEach(m=>{
+    const res=(m.resultado||'').toLowerCase();if(!res)return;
+    const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+    [p1,p2].forEach(p=>{
+      if(m.attendance[p]!=='X')return;
+      if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))wMap[p]=(wMap[p]||0)+1;
+      else if(res==='empate')eMap[p]=(eMap[p]||0)+1;
+      else lMap[p]=(lMap[p]||0)+1;
+    });
+  });
+  const gMap={[p1]:0,[p2]:0};
+  sorted.forEach(m=>{Object.entries(m.goals||{}).forEach(([n,g])=>{if(n===p1||n===p2)gMap[n]=(gMap[n]||0)+g;});});
+  const bMap={[p1]:0,[p2]:0};
+  sorted.forEach(m=>{if(m.mvp===p1)bMap[p1]++;if(m.mvp===p2)bMap[p2]++;});
+  let together=0,togetherW=0,togetherL=0;
+  sorted.forEach(m=>{
+    if(m.attendance[p1]!=='X'||m.attendance[p2]!=='X')return;
+    const bl=(m.teams&&m.teams.blanco)||[],ng=(m.teams&&m.teams.negro)||[];
+    const same=(bl.includes(p1)&&bl.includes(p2))||(ng.includes(p1)&&ng.includes(p2));
+    if(!same)return;together++;
+    const res=(m.resultado||'').toLowerCase();const inBl=bl.includes(p1);
+    if((inBl&&res==='blanco')||(!inBl&&res==='negro'))togetherW++;
+    else if(res!=='empate')togetherL++;
+  });
+  const pos_label1=(DB._playerPositions&&DB._playerPositions[p1])||'—';
+  const pos_label2=(DB._playerPositions&&DB._playerPositions[p2])||'—';
+  const w1=wMap[p1]||0,e1=eMap[p1]||0,l1=lMap[p1]||0,t1=w1+e1+l1;
+  const w2=wMap[p2]||0,e2=eMap[p2]||0,l2=lMap[p2]||0,t2=w2+e2+l2;
+  const wpct1=t1>=5?Math.round(w1/t1*100):null;
+  const wpct2=t2>=5?Math.round(w2/t2*100):null;
+  function win(v1,v2,hi=true){
+    if(v1===null||v2===null||v1===v2)return['',''];
+    return hi?(v1>v2?['color:#4ade80','']:['','color:#4ade80']):(v1<v2?['color:#4ade80','']:['','color:#4ade80']);
+  }
+  function row(label,v1,v2,hi=true,suf=''){
+    const[c1,c2]=win(parseFloat(v1),parseFloat(v2),hi);
+    return`<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:8px 12px;font-family:'Bebas Neue',sans-serif;font-size:17px;${c1}">${v1!==null?v1+suf:'—'}</td>
+      <td style="padding:6px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--grey);text-align:center;letter-spacing:1px;white-space:nowrap">${label}</td>
+      <td style="padding:8px 12px;font-family:'Bebas Neue',sans-serif;font-size:17px;text-align:right;${c2}">${v2!==null?v2+suf:'—'}</td>
+    </tr>`;
+  }
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white)">${p1}</div>
+        <div style="font-size:11px;color:#22d3ee;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${pos_label1}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--teal);margin:4px 0">#${pos1}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:6px">${badges1.slice(0,4).map(b=>`<span class="badge ${b.cls}" style="font-size:9px">${b.lbl}</span>`).join('')}</div>
+      </div>
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white)">${p2}</div>
+        <div style="font-size:11px;color:#22d3ee;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">${pos_label2}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--teal);margin:4px 0">#${pos2}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;justify-content:center;margin-top:6px">${badges2.slice(0,4).map(b=>`<span class="badge ${b.cls}" style="font-size:9px">${b.lbl}</span>`).join('')}</div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+      <thead><tr>
+        <th style="padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--teal);text-align:left">${p1}</th>
+        <th></th>
+        <th style="padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--teal);text-align:right">${p2}</th>
+      </tr></thead>
+      <tbody>
+        ${row('Puntos',s1.pts,s2.pts)}
+        ${row('Jugados',s1.played,s2.played)}
+        ${row('% Asistencia',s1.pct,s2.pct,true,'%')}
+        ${row('Victorias',w1,w2)}
+        ${row('Empates',e1,e2,false)}
+        ${row('Derrotas',l1,l2,false)}
+        ${row('% Victorias',wpct1,wpct2,true,'%')}
+        ${row('Racha actual',s1.curS,s2.curS)}
+        ${row('Máx racha',s1.maxS,s2.maxS)}
+        ${row('Goles',gMap[p1],gMap[p2])}
+        ${row('Brunatos',bMap[p1],bMap[p2])}
+      </tbody>
+    </table>
+    ${together>0?`<div class="card">
+      <div class="card-title">🤝 Cuando juegan juntos</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:10px">
+        <div style="background:rgba(74,222,128,0.08);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#4ade80">${togetherW}</div>
+          <div style="font-size:10px;color:var(--grey)">Victorias</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#94a3b8">${together}</div>
+          <div style="font-size:10px;color:var(--grey)">Partidos juntos</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border-radius:8px;padding:10px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#f87171">${togetherL}</div>
+          <div style="font-size:10px;color:var(--grey)">Derrotas</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${togetherW>togetherL?'#4ade80':'#f87171'}">${Math.round(togetherW/together*100)}% de victorias juntos</div>
+    </div>`:''}
+  `;
+}
 function filterPlayers(){
   const q=document.getElementById('players-search').value.toLowerCase();
   drawPlayersGrid(playersArr.filter(d=>d.name.toLowerCase().includes(q)));
@@ -2741,8 +2911,10 @@ function openModal(name){
     if(h==='H')return`<div class="hm" style="background:rgba(148,163,184,0.2)" title="${tip} 💨"></div>`;
     return`<div class="hm absent" title="${tip} ✗"></div>`;
   }).join('');
+  const position=(DB._playerPositions&&DB._playerPositions[name])||null;
   document.getElementById('modal-content').innerHTML=`
     <div class="modal-title">${name}</div>
+    ${position?`<div style="display:inline-block;background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:#22d3ee;margin-bottom:8px">${position}</div>`:''}
     <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:4px">${badges.map(b=>`<span class="badge ${b.cls}">${b.lbl}</span>`).join('')}</div>
     <div style="color:var(--grey);font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:2px;margin-bottom:14px">Debut: ${debutStr}</div>
     <div class="modal-stats">
@@ -3031,12 +3203,23 @@ function updateGoalsList(listId,state){
   const xPlayers=Object.entries(state).filter(([,v])=>v==='B'||v==='N').map(([p])=>p);
   const el=document.getElementById(listId);
   if(!el)return;
+  // Save existing values before rebuild
+  const existing={};
+  el.querySelectorAll('.goal-input').forEach(inp=>{
+    const v=parseInt(inp.value)||0;
+    if(v>0)existing[inp.id]=v;
+  });
   if(!xPlayers.length){el.innerHTML='<div class="empty" style="padding:10px;font-size:11px">Seleccioná jugadores primero</div>';return;}
   el.innerHTML=xPlayers.map(p=>`
     <div class="goal-row">
       <div class="goal-name">${p}</div>
       <input class="goal-input" type="number" min="0" max="20" value="0" id="g-${p.replace(/[^a-z0-9]/gi,'_')}" placeholder="0">
     </div>`).join('');
+  // Restore saved values
+  Object.entries(existing).forEach(([id,v])=>{
+    const inp=document.getElementById(id);
+    if(inp)inp.value=v;
+  });
 }
 
 function getGoalsFromUI(state){
@@ -3569,19 +3752,25 @@ function showMonth(key, btn){
   const mStats={};
 
   monthMatches.forEach(function(m){
+    const res=(m.resultado||'').toLowerCase();
+    const bl=(m.teams&&m.teams.blanco)||[];
+    const ng=(m.teams&&m.teams.negro)||[];
     Object.entries(m.attendance).forEach(function(e){
       var p=e[0],v=e[1];
       if(!mStats[p])mStats[p]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
-      if(v==='X'){mStats[p].played++;mStats[p].pts+=1;}
+      if(v==='X'){
+        mStats[p].played++;
+        if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))mStats[p].pts+=3;
+        else if(res==='empate')mStats[p].pts+=1;
+      }
       else if(v==='O'){
         if(m.saf&&m.saf.includes(p)){mStats[p].saf++;}
         else{mStats[p].watched++;}
-        mStats[p].pts+=0.4;
       }
     });
     (m.humo||[]).forEach(function(p){
       if(!mStats[p])mStats[p]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
-      mStats[p].humo++;mStats[p].pts-=0.5;
+      mStats[p].humo++;
     });
     Object.entries(m.goals||{}).forEach(function(e){
       if(e[1]>0){
@@ -3591,7 +3780,7 @@ function showMonth(key, btn){
     });
     if(m.mvp){
       if(!mStats[m.mvp])mStats[m.mvp]={played:0,watched:0,saf:0,humo:0,pts:0,goles:0,mvps:0};
-      mStats[m.mvp].mvps++;
+      mStats[m.mvp].mvps++;mStats[m.mvp].pts+=2;
     }
   });
 
@@ -3901,7 +4090,19 @@ function renderWeirdStats(){
   t16.forEach(p=>podiumCount[p]=0);
   Object.values(monthGroupsR).forEach(ms=>{
     const pts={};
-    ms.forEach(m=>Object.entries(m.attendance).forEach(([p,v])=>{if(!pts[p])pts[p]=0;if(v==='X')pts[p]+=1;else if(v==='O')pts[p]+=0.4;}));
+    ms.forEach(m=>{
+      const res=(m.resultado||'').toLowerCase();
+      const bl=(m.teams&&m.teams.blanco)||[];
+      const ng=(m.teams&&m.teams.negro)||[];
+      Object.entries(m.attendance).forEach(([p,v])=>{
+        if(!pts[p])pts[p]=0;
+        if(v==='X'){
+          if((bl.includes(p)&&res==='blanco')||(ng.includes(p)&&res==='negro'))pts[p]+=3;
+          else if(res==='empate')pts[p]+=1;
+        }
+      });
+      if(m.mvp){if(!pts[m.mvp])pts[m.mvp]=0;pts[m.mvp]+=2;}
+    });
     const ranked=Object.entries(pts).filter(([p])=>t16.includes(p)).sort((a,b)=>b[1]-a[1]);
     ranked.slice(0,3).forEach(([p])=>{if(podiumCount[p]!==undefined)podiumCount[p]++;});
   });
@@ -4746,6 +4947,79 @@ function showToast(msg,type=''){
 
 </script>
 
+<!-- MODAL NOVEDADES 2 — NUEVO -->
+<div id="modal-novedades2" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:10000;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
+  <div style="background:var(--bg-card);border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(34,211,238,0.3);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <!-- Header -->
+    <div style="position:sticky;top:0;background:var(--bg-card);padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0;z-index:1">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--white)">🆕 NOVEDADES</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#22d3ee;letter-spacing:2px;margin-top:2px">ACTUALIZACIÓN · JUNIO 2026 · VOL. 2</div>
+      </div>
+      <button onclick="document.getElementById('modal-novedades2').style.display='none';document.getElementById('modal-novedades').style.display='flex';" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--grey);font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:20px 24px 28px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.7">
+
+      <!-- Comparador -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#22d3ee;margin-bottom:10px">⚡ COMPARADOR DE JUGADORES</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <p style="margin:0 0 8px">Nueva pestaña en la sección <strong style="color:var(--white)">Jugadores</strong>. Elegís dos jugadores y ves todos sus stats lado a lado:</p>
+          <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px">
+            <li>Puntos, Jugados, % Asistencia, V/E/P, %V, Racha, Goles, Brunatos</li>
+            <li>El mejor en cada categoría se resalta en <strong style="color:#4ade80">verde</strong></li>
+            <li><strong style="color:var(--white)">Cuando juegan juntos</strong> — cuántas veces compartieron equipo, cuántas ganaron y cuántas perdieron</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Posicion -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#22d3ee;margin-bottom:10px">🎽 POSICIÓN EN EL PERFIL</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <p style="margin:0 0 8px">Cada jugador ahora tiene su posición registrada. Aparece en el perfil y en el Comparador.</p>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">POR</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">DEF</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">MCD</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">MC</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">MCO</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">EXT</span>
+            <span style="background:rgba(34,211,238,0.12);border:1px solid rgba(34,211,238,0.35);border-radius:6px;padding:3px 10px;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#22d3ee">DEL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div style="margin-bottom:6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#22d3ee;margin-bottom:10px">📊 NUEVOS FILTROS EN RANKING</div>
+        <div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px 14px;border:1px solid var(--border)">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:8px 12px;background:rgba(34,211,238,0.06);border-radius:6px;border:1px solid rgba(34,211,238,0.15)">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#22d3ee;letter-spacing:1px">🎽 AMATEURISMO</div>
+              <div style="font-size:12px;color:var(--grey-light);margin-top:2px">Todos los partidos desde el inicio hasta el <strong style="color:var(--white)">02/06/2026</strong>. La era en la que todo era diversión sin presión.</div>
+            </div>
+            <div style="padding:8px 12px;background:rgba(251,191,36,0.06);border-radius:6px;border:1px solid rgba(251,191,36,0.15)">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#fbbf24;letter-spacing:1px">⚡ PROFESIONALISMO</div>
+              <div style="font-size:12px;color:var(--grey-light);margin-top:2px">Desde el <strong style="color:var(--white)">09/06/2026</strong> en adelante. La era donde se registran goles, resultados y Brunatos partido a partido.</div>
+            </div>
+            <div style="font-size:12px;color:var(--grey);font-style:italic">Los badges solo aparecen en la vista <strong style="color:var(--white)">Histórico</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 24px 20px;border-top:1px solid var(--border);text-align:center">
+      <button onclick="document.getElementById('modal-novedades2').style.display='none';document.getElementById('modal-novedades').style.display='flex';" style="background:#22d3ee;color:#000;border:none;padding:10px 32px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer">SIGUIENTE →</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#475569;margin-top:10px;letter-spacing:1px">ESTE AVISO APARECE HASTA EL 22/06/2026</div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVEDADES -->
 <div id="modal-novedades" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:9999;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
   <div style="background:var(--bg-card);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(59,130,246,0.3);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
@@ -4848,7 +5122,7 @@ function showToast(msg,type=''){
     <!-- Footer -->
     <div style="padding:14px 24px 20px;border-top:1px solid var(--border);text-align:center">
       <button onclick="document.getElementById('modal-novedades').style.display='none'" style="background:var(--teal);color:#000;border:none;padding:10px 32px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer">ENTENDIDO ✓</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#475569;margin-top:10px;letter-spacing:1px">ESTE AVISO APARECE HASTA EL 17/06/2026</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#475569;margin-top:10px;letter-spacing:1px">ESTE AVISO APARECE HASTA EL 22/06/2026</div>
     </div>
   </div>
 </div>
