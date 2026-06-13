@@ -880,11 +880,13 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="nav-link" onclick="showSection('equipos',this)">⚽ Equipos</button>
       <button class="nav-link" onclick="showSection('estadisticas',this)">📊 Estadísticas</button>
       <button class="nav-link" onclick="showSection('champagnat',this)">🏫 Champagnat</button>
-      <button class="nav-link" onclick="showSection('faq',this)">📋 FAQ</button>
       <button class="nav-link" onclick="showSection('brunato',this)" style="color:#F59E0B">🏆 Brunato</button>
       <button class="nav-link" onclick="showSection('emisao',this)" style="color:#F59E0B">EMISAO CR7</button>
       <button class="nav-link" onclick="showSection('mundial',this)">🌎 MUNDIAL</button>
       <button class="nav-link" onclick="showSection('gira',this)" style="color:#22d3ee">🇺🇾 GIRA MVD</button>
+      <button class="nav-link" onclick="showSection('votar',this)" style="color:#fbbf24">🗳️ VOTAR</button>
+      <button class="nav-link" onclick="showSection('apuestas',this)" style="color:#4ade80">🎰 APUESTAS</button>
+      <button class="nav-link" onclick="showSection('faq',this)">📋 FAQ</button>
       <button class="nav-link" onclick="showSection('tyc',this)">T&amp;C</button>
       <button class="nav-link" onclick="showSection('admin',this)">🔧 Admin</button>
 
@@ -913,6 +915,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         <div class="punto-pill"><span class="ico">🏆</span><span class="txt">Ganó = <span class="pts">3 puntos</span></span></div>
         <div class="punto-pill"><span class="ico">🤝</span><span class="txt">Empató = <span class="pts">1 punto</span></span></div>
         <div class="punto-pill"><span class="ico">🥇</span><span class="txt">Brunato = <span class="pts">+2 puntos</span></span></div>
+        <div class="punto-pill"><span class="ico">🧤</span><span class="txt">Guante de Oro = <span class="pts">+1 punto</span></span></div>
         <div class="punto-pill"><span class="ico">📅</span><span class="txt">Desde <span class="pts">Jul 2025</span></span></div>
       </div>
     </div>
@@ -1367,23 +1370,84 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--grey);letter-spacing:1px;margin-bottom:10px">© 2026 · Todos los derechos reservados · Fútbol Martes 20hs · BRUNATO FC · Buenos Aires</div>
   </div>
   </div>
+  <!-- VOTAR -->
+  <div class="section" id="s-votar">
+    <div class="section-title" style="color:#fbbf24">🗳️ VOTAR</div>
+    <div class="section-sub">Brunato y Guante de Oro · Anónimo</div>
+
+    <div id="votar-login" class="card" style="max-width:400px">
+      <div class="card-title" style="margin-bottom:14px">¿Quién sos?</div>
+      <div class="form-group">
+        <label class="flabel">Tu nombre</label>
+        <select class="fselect" id="votar-nombre">
+          <option value="">— Elegir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="flabel">Tu contraseña</label>
+        <input type="password" class="finput" id="votar-pw" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')votarLogin()">
+      </div>
+      <div id="votar-error" style="color:var(--red);font-size:12px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;display:none;margin-bottom:8px">Contraseña incorrecta</div>
+      <button class="btn-p" onclick="votarLogin()">ENTRAR</button>
+    </div>
+
+    <div id="votar-panel" style="display:none;max-width:480px">
+      <div id="votar-bienvenida" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--teal);letter-spacing:1px;margin-bottom:16px"></div>
+
+      <!-- Selector de partido -->
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:10px">¿Sobre qué partido?</div>
+        <select class="fselect" id="votar-match-sel" onchange="onVotarMatchChange()">
+          <option value="">— Elegir partido —</option>
+        </select>
+      </div>
+
+      <div id="votar-ya-voto" style="display:none">
+        <div class="card" style="text-align:center;padding:24px">
+          <div style="font-size:32px;margin-bottom:8px">✅</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white)">Ya votaste</div>
+          <div style="font-size:13px;color:var(--grey);margin-top:6px">Tu voto fue registrado. Los resultados se publican a medida que votan.</div>
+        </div>
+      </div>
+
+      <div id="votar-form" style="display:none">
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title" style="color:#fbbf24">🏆 ¿Quién fue el Brunato?</div>
+          <div style="font-size:12px;color:var(--grey);margin-bottom:12px">El mejor jugador de la noche.</div>
+          <div id="votar-brunato-options" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-title" style="color:#22d3ee">🧤 ¿Quién fue el Guante de Oro?</div>
+          <div style="font-size:12px;color:var(--grey);margin-bottom:12px">El mejor arquero del partido.</div>
+          <div id="votar-gdo-options" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div id="votar-submit-error" style="color:var(--red);font-size:12px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;display:none;margin-bottom:8px">Tenés que votar en ambas categorías</div>
+        <button class="btn-p" onclick="submitVoto()" style="width:100%">CONFIRMAR VOTO</button>
+        <div style="font-size:11px;color:var(--grey);text-align:center;margin-top:8px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">Anónimo · No se puede cambiar</div>
+      </div>
+
+      <div id="votar-resultados" style="display:none"></div>
+    </div>
+  </div>
+
     <div class="section" id="s-tyc">
     <div class="section-title">Términos y Condiciones</div>
     <div class="section-sub">Versión 1.0 · Vigente desde julio de 2025</div>
     <div class="card" style="font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.9;max-width:720px">
-      <p><strong style="color:var(--white)">1. ACEPTACIÓN DE LOS TÉRMINOS</strong><br>Al acceder y utilizar la plataforma Fútbol Martes 20hs GRUN (en adelante, "la Plataforma"), el usuario acepta en su totalidad los presentes Términos y Condiciones. Si no está de acuerdo con alguno de los términos aquí establecidos, deberá abstenerse de utilizar la Plataforma.</p>
-      <p><strong style="color:var(--white)">2. DESCRIPCIÓN DEL SERVICIO</strong><br>La Plataforma es un sistema privado de estadísticas, rankings y seguimiento de asistencia destinado exclusivamente al grupo de fútbol amateur "GRUN", que se reúne los días martes a las 20 horas en las instalaciones del Colegio Champagnat, Buenos Aires, República Argentina. El acceso está restringido mediante contraseña y no es de carácter público.</p>
+      <p><strong style="color:var(--white)">1. ACEPTACIÓN DE LOS TÉRMINOS</strong><br>Al acceder y utilizar la plataforma BRUNATO FC (en adelante, "la Plataforma"), el usuario acepta en su totalidad los presentes Términos y Condiciones. Si no está de acuerdo con alguno de los términos aquí establecidos, deberá abstenerse de utilizar la Plataforma.</p>
+      <p><strong style="color:var(--white)">2. DESCRIPCIÓN DEL SERVICIO</strong><br>La Plataforma es un sistema privado de estadísticas, rankings y seguimiento de asistencia destinado exclusivamente al grupo de fútbol amateur BRUNATO FC, que se reúne los días martes a las 20 horas en las instalaciones de GRUN, Buenos Aires, República Argentina. El acceso está restringido mediante contraseña y no es de carácter público. El grupo lleva el nombre del Colegio Champagnat, institución que nos formó a todos.</p>
       <p><strong style="color:var(--white)">3. REGISTRO Y ACCESO</strong><br>El acceso requiere una contraseña de uso compartido. El usuario que la comparta con personas ajenas asume plena responsabilidad. La administración se reserva el derecho de modificarla en cualquier momento y sin previo aviso.</p>
-      <p><strong style="color:var(--white)">4. SISTEMA DE PUNTOS Y RANKING</strong><br>El ranking se calcula automáticamente: Partido ganado +3 puntos · Partido empatado +1 punto · Partido perdido 0 puntos · Humo 💨 y Hincha 👁️ no suman ni restan puntos. No admite apelaciones, reconsideraciones ni negociaciones de ningún tipo.</p>
+      <p><strong style="color:var(--white)">4. SISTEMA DE PUNTOS Y RANKING</strong><br>El ranking se calcula automáticamente: Partido ganado +3 puntos · Partido empatado +1 punto · Partido perdido 0 puntos · Premio Brunato +2 puntos · Guante de Oro +1 punto · Humo 💨 y Hincha 👁️ no suman ni restan puntos. No admite apelaciones, reconsideraciones ni negociaciones de ningún tipo.</p>
       <p><strong style="color:var(--white)">5. CARGA DE DATOS Y RESPONSABILIDAD</strong><br>La carga de información es responsabilidad exclusiva del administrador. Los datos ingresados se consideran definitivos una vez guardados. La Plataforma no se responsabiliza por datos incorrectos ingresados de buena o mala fe.</p>
-      <p><strong style="color:var(--white)">6. EL HUMO</strong><br>Confirmar y no presentarse genera una penalización automática de 0.5 puntos y queda registrado de forma permanente bajo el badge 💨. La Plataforma no acepta justificaciones, descargos ni recursos de ningún tipo.</p>
-      <p><strong style="color:var(--white)">7. EL SAF — SIN ACTIVIDAD FÍSICA</strong><br>Confirmar, no jugar, pero presentarse a ver el partido. No genera penalización y mantiene la racha activa. El badge 🚑 queda registrado en el perfil.</p>
+      <p><strong style="color:var(--white)">6. EL HUMO</strong><br>Confirmar y no presentarse queda registrado de forma permanente bajo el badge 💨. No resta puntos, pero la vergüenza es permanente. La Plataforma no acepta justificaciones, descargos ni recursos de ningún tipo.</p>
+      <p><strong style="color:var(--white)">7. EL SAF — SIN ACTIVIDAD FÍSICA</strong><br>Confirmar, no jugar, pero presentarse a ver el partido. No genera penalización. El badge 🚑 queda registrado en el perfil. No interrumpe la racha de victorias.</p>
       <p><strong style="color:var(--white)">8. BADGES Y RECONOCIMIENTOS</strong><br>Los badges son automáticos y dinámicos, calculados en tiempo real. La administración se reserva el derecho de crearlos, modificarlos o eliminarlos. No constituyen reconocimientos oficiales de ningún organismo deportivo.</p>
-      <p><strong style="color:var(--white)">9. EL PREMIO BRUNATO</strong><br>El galardón máximo de la Plataforma. Sus criterios son confidenciales, subjetivos e inapelables. La decisión del otorgante es final.</p>
-      <p><strong style="color:var(--white)">10. PRIVACIDAD Y PROTECCIÓN DE DATOS</strong><br>La Plataforma almacena únicamente datos de actividad deportiva. No se almacenan datos personales sensibles. Accesibles solo por miembros con contraseña.</p>
-      <p><strong style="color:var(--white)">11. PROPIEDAD INTELECTUAL</strong><br>El diseño, desarrollo y contenido son propiedad de sus creadores. Queda prohibida la reproducción sin autorización expresa. Hecho con Claude por.</p>
-      <p><strong style="color:var(--white)">12. MODIFICACIONES</strong><br>La administración se reserva el derecho de modificar estos Términos en cualquier momento y sin previo aviso. Estadísticamente, ningún usuario los ha leído en su totalidad.</p>
-      <p><strong style="color:var(--white)">13. JURISDICCIÓN</strong><br>Cualquier controversia será resuelta en primera instancia en el vestuario del Colegio Champagnat, con la mediación del DT de turno. En caso de no llegarse a un acuerdo, la decisión final corresponde al administrador.</p>
+      <p><strong style="color:var(--white)">9. EL PREMIO BRUNATO</strong><br>El galardón máximo de la Plataforma. Sus criterios son confidenciales, subjetivos e inapelables. La decisión del otorgante es final. Suma +2 puntos al ranking.</p>
+      <p><strong style="color:var(--white)">10. EL GUANTE DE ORO</strong><br>Premio al mejor arquero del partido. Otorgado por el administrador. Sus criterios son subjetivos e inapelables. Suma +1 punto al ranking.</p>
+      <p><strong style="color:var(--white)">11. PRIVACIDAD Y PROTECCIÓN DE DATOS</strong><br>La Plataforma almacena únicamente datos de actividad deportiva. No se almacenan datos personales sensibles. Accesibles solo por miembros con contraseña.</p>
+      <p><strong style="color:var(--white)">12. PROPIEDAD INTELECTUAL</strong><br>El diseño, desarrollo y contenido son propiedad de sus creadores. Queda prohibida la reproducción sin autorización expresa. Hecho con Claude.</p>
+      <p><strong style="color:var(--white)">13. MODIFICACIONES</strong><br>La administración se reserva el derecho de modificar estos Términos en cualquier momento y sin previo aviso. Estadísticamente, ningún usuario los ha leído en su totalidad.</p>
+      <p><strong style="color:var(--white)">14. JURISDICCIÓN</strong><br>Cualquier controversia será resuelta en primera instancia en el vestuario de GRUN, con la mediación del DT de turno. En caso de no llegarse a un acuerdo, la decisión final corresponde al administrador.</p>
     </div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
@@ -1422,6 +1486,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         <button class="atab" onclick="adminTab('brunato-admin',this)" style="color:#F59E0B">🏆 Brunato</button>
         <button class="atab" onclick="adminTab('emisao-admin',this)" style="color:#F59E0B">EMISAO CR7</button>
         <button class="atab" onclick="adminTab('exportar',this)">Exportar HTML</button>
+        <button class="atab" onclick="adminTab('votaciones',this)" style="color:#fbbf24">🗳️ Votaciones</button>
       </div>
 
       <!-- NUEVO PARTIDO -->
@@ -1667,6 +1732,17 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         </div>
         <button class="btn-p" onclick="exportHTML()">⬇ DESCARGAR HTML ACTUALIZADO</button>
       </div>
+
+      <div class="apanel card" id="ap-votaciones">
+        <div class="card-title" style="color:#fbbf24;margin-bottom:16px">🗳️ Recuento de votos por partido</div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="flabel">Partido</label>
+          <select class="fselect" id="admin-votar-match" onchange="loadAdminVotos()">
+            <option value="">— Elegir partido —</option>
+          </select>
+        </div>
+        <div id="admin-votos-result"></div>
+      </div>
     </div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
@@ -1892,6 +1968,36 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
   </div>
 
   <!-- FAQ -->
+  <!-- APUESTAS -->
+  <div class="section" id="s-apuestas">
+    <div class="section-title" style="color:#4ade80">🎰 APUESTAS</div>
+    <div class="section-sub">¿Quién la ve venir?</div>
+
+    <div id="apuestas-login" class="card" style="max-width:400px">
+      <div class="card-title" style="margin-bottom:14px">¿Quién sos?</div>
+      <div class="form-group">
+        <label class="flabel">Tu nombre</label>
+        <select class="fselect" id="apuestas-nombre">
+          <option value="">— Elegir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="flabel">Tu contraseña</label>
+        <input type="password" class="finput" id="apuestas-pw" placeholder="••••••••" autocomplete="off" onkeydown="if(event.key==='Enter')apuestasLogin()">
+      </div>
+      <div id="apuestas-error" style="color:var(--red);font-size:12px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;display:none;margin-bottom:8px">Contraseña incorrecta</div>
+      <button class="btn-p" onclick="apuestasLogin()">ENTRAR</button>
+    </div>
+
+    <div id="apuestas-panel" style="display:none;max-width:480px">
+      <div class="card" style="text-align:center;padding:32px 24px">
+        <div style="font-size:48px;margin-bottom:16px">🎰</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:#4ade80;margin-bottom:8px">HOLA TIMBERO</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--grey);letter-spacing:2px">PRÓXIMAMENTE NOS VEREMOS POR ACÁ</div>
+      </div>
+    </div>
+  </div>
+
   <div class="section" id="s-faq">
     <div class="section-title">FAQ</div>
     <div class="section-sub">Preguntas frecuentes del grupo</div>
@@ -2024,7 +2130,7 @@ async function doLogin(){
     const expiry = new Date('2026-06-22T23:59:59');
     if(new Date() <= expiry){
       setTimeout(()=>{
-        document.getElementById('modal-novedades2').style.display='flex';
+        document.getElementById('modal-novedades3').style.display='flex';
       }, 800);
     }
   } else {
@@ -2056,9 +2162,7 @@ document.getElementById('apw').addEventListener('keydown',e=>{if(e.key==='Enter'
 
 // NAV
 function showSection(id,btn){
-  // Pause and reset all videos when navigating away
   document.querySelectorAll('video').forEach(v=>{v.pause();v.currentTime=0;});
-  // Close lightbox if open
   const lb=document.getElementById('lightbox');
   if(lb&&lb.style.display!=='none'){lb.style.display='none';lb.innerHTML='';document.body.style.overflow='';}
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
@@ -2066,6 +2170,8 @@ function showSection(id,btn){
   document.getElementById('s-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
+  if(id==='votar'){try{initVotar();}catch(e){console.error('initVotar:',e);}}
+  if(id==='apuestas'){try{initApuestas();}catch(e){console.error('initApuestas:',e);}}
 }
 
 // STATS ENGINE
@@ -3175,8 +3281,207 @@ const TOP5_FRASES = [
 ];
 
 // CHAMPAGNAT
-function renderChampagnat(){
-  const grupoFrases = DB.frases.filter(f=>f.author!=='San Marcelino Champagnat');
+
+// ══════════════════════════════════════════
+// VOTAR
+// ══════════════════════════════════════════
+let votarUser=null;
+let votarMatchId=null;
+let votarBrunato=null;
+let votarGdo=null;
+
+function initVotar(){
+  const sel=document.getElementById('votar-nombre');
+  if(!sel||sel.options.length>1)return;
+  const withPw=['Pepo','Oso','Batata','Bauti','Rodri','Burro','Fede','Pipe','Cholo','Gonza','Nico','Nacho','Paco','Felix','Hueso','Chona','Manu','Manolo','Toro','Lucas','Kuza','Tise','Tony'];
+  withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+  // populate match selector — only from 09/06/2026 onwards
+  const ms=document.getElementById('votar-match-sel');
+  if(ms&&ms.options.length===1){
+    const sorted=[...DB.matches].filter(m=>m.date>='2026-06-09').sort((a,b)=>b.date.localeCompare(a.date));
+    sorted.forEach(m=>{
+      const o=document.createElement('option');
+      o.value=m._id;
+      const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+      o.textContent=ds;
+      ms.appendChild(o);
+    });
+  }
+}
+
+async function votarLogin(){
+  const name=document.getElementById('votar-nombre').value;
+  const pw=document.getElementById('votar-pw').value;
+  if(!name||!pw)return;
+  const h=await hashStr(pw);
+  const r=await fetch(`${SB_URL}/rest/v1/players?name=eq.${encodeURIComponent(name)}&select=password_hash`,{headers:SBH});
+  const data=await r.json();
+  if(!data.length||data[0].password_hash!==h){
+    document.getElementById('votar-error').style.display='block';return;
+  }
+  document.getElementById('votar-error').style.display='none';
+  document.getElementById('votar-login').style.display='none';
+  document.getElementById('votar-panel').style.display='block';
+  votarUser=name;
+  document.getElementById('votar-bienvenida').textContent=`Hola ${name} — Elegí un partido para votar`;
+}
+
+async function onVotarMatchChange(){
+  const sel=document.getElementById('votar-match-sel');
+  votarMatchId=sel.value;
+  votarBrunato=null;votarGdo=null;
+  document.getElementById('votar-ya-voto').style.display='none';
+  document.getElementById('votar-form').style.display='none';
+  document.getElementById('votar-resultados').innerHTML='';
+  if(!votarMatchId)return;
+  // Check if already voted
+  const rv=await fetch(`${SB_URL}/rest/v1/votes?match_id=eq.${parseInt(votarMatchId)}&voter=eq.${encodeURIComponent(votarUser)}`,{headers:SBH});
+  const vdata=await rv.json();
+  if(vdata.length>0){
+    document.getElementById('votar-ya-voto').style.display='block';return;
+  }
+  // Build player options from match
+  const match=DB.matches.find(m=>m._id===votarMatchId);
+  if(!match)return;
+  const players=[...new Set([...(match.teams&&match.teams.blanco||[]),...(match.teams&&match.teams.negro||[])])];
+  if(!players.length){document.getElementById('votar-form').innerHTML='<div class="empty">No hay jugadores cargados para este partido</div>';document.getElementById('votar-form').style.display='block';return;}
+  ['votar-brunato-options','votar-gdo-options'].forEach((id,ti)=>{
+    document.getElementById(id).innerHTML=players.map(p=>`<div onclick="selectVoto('${ti===0?'brunato':'gdo'}','${p}',this)" style="padding:10px 14px;border-radius:8px;border:1px solid var(--border);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white);background:var(--bg-card)" data-player="${p}">${p}</div>`).join('');
+  });
+  document.getElementById('votar-form').style.display='block';
+}
+
+function selectVoto(tipo,player,el){
+  el.parentElement.querySelectorAll('div').forEach(d=>{d.style.background='var(--bg-card)';d.style.borderColor='var(--border)';d.style.color='var(--white)';});
+  el.style.background=tipo==='brunato'?'rgba(251,191,36,0.15)':'rgba(34,211,238,0.15)';
+  el.style.borderColor=tipo==='brunato'?'#fbbf24':'#22d3ee';
+  el.style.color=tipo==='brunato'?'#fbbf24':'#22d3ee';
+  if(tipo==='brunato')votarBrunato=player;else votarGdo=player;
+}
+
+async function submitVoto(){
+  if(!votarBrunato||!votarGdo){document.getElementById('votar-submit-error').style.display='block';return;}
+  document.getElementById('votar-submit-error').style.display='none';
+  const btn=document.querySelector('[onclick="submitVoto()"]');
+  if(btn){btn.textContent='Guardando...';btn.disabled=true;}
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/votes`,{
+      method:'POST',
+      headers:{...SBH,'Prefer':'return=minimal'},
+      body:JSON.stringify({match_id:parseInt(votarMatchId),voter:votarUser,brunato_vote:votarBrunato,gdo_vote:votarGdo})
+    });
+    if(r.ok||r.status===201||r.status===204){
+      document.getElementById('votar-ya-voto').style.display='block';
+      document.getElementById('votar-form').style.display='none';
+      loadResultados();
+      showToast('Voto registrado ✓','ok');
+    } else {
+      const err=await r.text();
+      console.error('Vote error:',r.status,err);
+      showToast('Error al guardar: '+r.status,'err');
+      if(btn){btn.textContent='CONFIRMAR VOTO';btn.disabled=false;}
+    }
+  }catch(e){
+    console.error('submitVoto error:',e);
+    showToast('Error de conexión','err');
+    if(btn){btn.textContent='CONFIRMAR VOTO';btn.disabled=false;}
+  }
+}
+
+async function loadResultados(){
+  const el=document.getElementById('votar-resultados');
+  if(!votarMatchId||!el)return;
+  const r=await fetch(`${SB_URL}/rest/v1/votes?match_id=eq.${parseInt(votarMatchId)}&select=brunato_vote,gdo_vote`,{headers:SBH});
+  const votes=await r.json();
+  if(!votes.length){el.innerHTML='';return;}
+  const bCount={},gCount={};
+  votes.forEach(v=>{if(v.brunato_vote)bCount[v.brunato_vote]=(bCount[v.brunato_vote]||0)+1;if(v.gdo_vote)gCount[v.gdo_vote]=(gCount[v.gdo_vote]||0)+1;});
+  const bSort=Object.entries(bCount).sort((a,b)=>b[1]-a[1]);
+  const gSort=Object.entries(gCount).sort((a,b)=>b[1]-a[1]);
+  const total=votes.length;
+  el.innerHTML=`<div class="card"><div class="card-title">Resultados — ${total} voto${total!==1?'s':''}</div><div style="margin-bottom:14px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:2px;margin-bottom:8px">BRUNATO</div>${bSort.map(([p,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);width:90px">${p}</div><div style="flex:1;background:rgba(251,191,36,0.1);border-radius:4px;height:8px"><div style="background:#fbbf24;border-radius:4px;height:8px;width:${Math.round(v/total*100)}%"></div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fbbf24">${v}</div></div>`).join('')}</div><div><div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#22d3ee;letter-spacing:2px;margin-bottom:8px">GUANTE DE ORO</div>${gSort.map(([p,v])=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);width:90px">${p}</div><div style="flex:1;background:rgba(34,211,238,0.1);border-radius:4px;height:8px"><div style="background:#22d3ee;border-radius:4px;height:8px;width:${Math.round(v/total*100)}%"></div></div><div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#22d3ee">${v}</div></div>`).join('')}</div></div>`;
+}
+
+// ADMIN VOTACIONES
+async function loadAdminVotos(){
+  const matchId=document.getElementById('admin-votar-match').value;
+  const el=document.getElementById('admin-votos-result');
+  if(!matchId){el.innerHTML='';return;}
+  const r=await fetch(`${SB_URL}/rest/v1/votes?match_id=eq.${parseInt(matchId)}&select=voter,brunato_vote,gdo_vote,created_at&order=created_at`,{headers:SBH});
+  const votes=await r.json();
+  if(!votes.length){el.innerHTML='<div class="empty">Sin votos para este partido</div>';return;}
+  const bCount={},gCount={};
+  votes.forEach(v=>{if(v.brunato_vote)bCount[v.brunato_vote]=(bCount[v.brunato_vote]||0)+1;if(v.gdo_vote)gCount[v.gdo_vote]=(gCount[v.gdo_vote]||0)+1;});
+  const bSort=Object.entries(bCount).sort((a,b)=>b[1]-a[1]);
+  const gSort=Object.entries(gCount).sort((a,b)=>b[1]-a[1]);
+  el.innerHTML=`
+    <div style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:2px;margin-bottom:8px">BRUNATO — ${votes.length} votos</div>
+      ${bSort.map(([p,v])=>`<div style="display:flex;justify-content:space-between;padding:5px 10px;background:rgba(251,191,36,0.07);border-radius:6px;margin-bottom:4px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${p}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fbbf24">${v}</span></div>`).join('')}
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:#22d3ee;letter-spacing:2px;margin-bottom:8px">GUANTE DE ORO</div>
+      ${gSort.map(([p,v])=>`<div style="display:flex;justify-content:space-between;padding:5px 10px;background:rgba(34,211,238,0.07);border-radius:6px;margin-bottom:4px"><span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${p}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#22d3ee">${v}</span></div>`).join('')}
+    </div>
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--grey);letter-spacing:2px;margin-bottom:8px">DETALLE (solo visible para admin)</div>
+      <table style="width:100%;font-size:12px;border-collapse:collapse">
+        <tr style="color:var(--grey)"><th style="text-align:left;padding:4px 6px">Jugador</th><th style="text-align:left;padding:4px 6px">Brunato</th><th style="text-align:left;padding:4px 6px">GDO</th></tr>
+        ${votes.map(v=>`<tr style="border-top:1px solid var(--border)"><td style="padding:5px 6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white)">${v.voter}</td><td style="padding:5px 6px;color:#fbbf24">${v.brunato_vote||'—'}</td><td style="padding:5px 6px;color:#22d3ee">${v.gdo_vote||'—'}</td><td style="padding:5px 6px;text-align:right"><button onclick="deleteVoto('${v.voter}','${matchId}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">BORRAR</button></td></tr>`).join('')}
+      </table>
+    </div>`;
+}
+
+function initApuestas(){
+  const sel=document.getElementById('apuestas-nombre');
+  if(!sel||sel.options.length>1)return;
+  const withPw=['Pepo','Oso','Batata','Bauti','Rodri','Burro','Fede','Pipe','Cholo','Gonza','Nico','Nacho','Paco','Felix','Hueso','Chona','Manu','Manolo','Toro','Lucas','Kuza','Tise','Tony'];
+  withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+}
+
+async function apuestasLogin(){
+  const name=document.getElementById('apuestas-nombre').value;
+  const pw=document.getElementById('apuestas-pw').value;
+  if(!name||!pw)return;
+  const h=await hashStr(pw);
+  const r=await fetch(`${SB_URL}/rest/v1/players?name=eq.${encodeURIComponent(name)}&select=password_hash`,{headers:SBH});
+  const data=await r.json();
+  if(!data.length||data[0].password_hash!==h){
+    document.getElementById('apuestas-error').style.display='block';return;
+  }
+  document.getElementById('apuestas-error').style.display='none';
+  document.getElementById('apuestas-login').style.display='none';
+  document.getElementById('apuestas-panel').style.display='block';
+}
+
+async function deleteVoto(voter, matchId){
+  if(!confirm(`¿Borrar el voto de ${voter}?`))return;
+  const r=await fetch(`${SB_URL}/rest/v1/votes?voter=eq.${encodeURIComponent(voter)}&match_id=eq.${parseInt(matchId)}`,{
+    method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}
+  });
+  if(r.ok||r.status===204){
+    showToast(`Voto de ${voter} borrado`,'ok');
+    loadAdminVotos();
+  } else {
+    showToast('Error al borrar','err');
+  }
+}
+
+function initAdminVotaciones(){
+  const sel=document.getElementById('admin-votar-match');
+  if(!sel||sel.options.length>1)return;
+  const sorted=[...DB.matches].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  sorted.forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m._id;
+    const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    o.textContent=ds;
+    sel.appendChild(o);
+  });
+}
+
+
+function renderChampagnat(){  const grupoFrases = DB.frases.filter(f=>f.author!=='San Marcelino Champagnat');
   const champFrases = DB.frases.filter(f=>f.author==='San Marcelino Champagnat');
   const renderFrasaCard = function(f){var nm=f.author?f.author:(f.nick?f.nick:'');var al='';if(nm||f.date){al='<div class="frase-auth">'+(nm?'- '+nm:'')+(f.date?' · '+f.date:'')+'</div>';}return'<div class="frase-card"><div class="frase-txt">"'+f.text+'"</div>'+al+'</div>';};
   // Top 5 IA
@@ -3556,6 +3861,7 @@ function adminTab(id,btn){
   document.querySelectorAll('.apanel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('ap-'+id).classList.add('active');
+  if(id==='votaciones'){try{initAdminVotaciones();}catch(e){console.error('initAdminVotaciones:',e);}}
 }
 
 // JUGADORES ADMIN
@@ -3800,6 +4106,7 @@ function statsTab(id, btn){
   if(id==='raras'){try{renderWeirdStats();}catch(e){console.error('renderWeirdStats:',e);document.getElementById('raras-grid').innerHTML='<div class="empty">Error: '+e.message+'</div>';}}
   if(id==='heatmap'){try{renderHeatmap();}catch(e){console.error('renderHeatmap:',e);}}
   if(id==='heatmap-partidos'){try{renderHeatmapPartidos();}catch(e){console.error('renderHeatmapPartidos:',e);}}
+  if(id==='votar'){try{initVotar();}catch(e){console.error('initVotar:',e);}}
 }
 
 // ══════════════════════════════════════════
@@ -4894,7 +5201,7 @@ function setWCFilter(f,btn){
 // ══════════════════════════════════════════
 // FAQ
 // ══════════════════════════════════════════
-const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. Ganaste el Guante de Oro +1 punto. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 3 o más victorias consecutivas activas. No se pierde si no jugás, solo si perdés o empatás.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#22d3ee'>🧤 GDO ×N</strong> — Ganó el Guante de Oro N veces. El mejor arquero del partido. Suma +1 pt cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 24 partidos, 75% de asistencia, y una sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
+const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. Ganaste el Guante de Oro +1 punto. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 3 o más victorias consecutivas activas. No se pierde si no jugás, solo si perdés o empatás.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#22d3ee'>🧤 GDO ×N</strong> — Ganó el Guante de Oro N veces. El mejor arquero del partido. Suma +1 pt cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 25 partidos jugados, 76% de asistencia, 12 victorias. Y lo más importante: ganador del Brunato del Año 2025, el premio más prestigioso del grupo. Tiene sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
 
 function renderFAQ(){
   var el=document.getElementById('faq-list');
@@ -5037,7 +5344,56 @@ function showToast(msg,type=''){
 
 </script>
 
-<!-- MODAL NOVEDADES 2 — NUEVO -->
+<!-- MODAL NOVEDADES 3 — VOL 3 -->
+<div id="modal-novedades3" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:10001;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
+  <div style="background:var(--bg-card);border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(251,191,36,0.3);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <!-- Header -->
+    <div style="position:sticky;top:0;background:var(--bg-card);padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0;z-index:1">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:3px;color:var(--white)">🆕 NOVEDADES</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#fbbf24;letter-spacing:2px;margin-top:2px">ACTUALIZACIÓN · JUNIO 2026 · VOL. 3</div>
+      </div>
+      <button onclick="document.getElementById('modal-novedades3').style.display='none';document.getElementById('modal-novedades2').style.display='flex';" style="background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--grey);font-size:18px;cursor:pointer;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+
+    <!-- Content -->
+    <div style="padding:20px 24px 28px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.7">
+
+      <!-- Apuestas -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#4ade80;margin-bottom:10px">🎰 NUEVA SECCIÓN: APUESTAS</div>
+        <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:14px 16px">
+          <p style="margin:0 0 8px">Apostá a situaciones de cada partido — ¿gol de Emi antes del minuto 30? ¿valla invicta del Toro? ¿alguien humea esta semana? El que más acierta gana gloria eterna.</p>
+          <p style="margin:0">Para ingresar: elegís tu nombre, ponés tu clave personal y listo. <strong style="color:#4ade80">Encontrala en la sección 🎰 APUESTAS del menú.</strong></p>
+        </div>
+      </div>
+
+      <!-- Votar -->
+      <div style="margin-bottom:18px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:#fbbf24;margin-bottom:10px">🗳️ NUEVA SECCIÓN: VOTAR</div>
+        <div style="background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:14px 16px">
+          <p style="margin:0 0 8px">Votá el <strong style="color:#fbbf24">Brunato</strong> y el <strong style="color:#22d3ee">Guante de Oro</strong> de cada partido desde la web. Mismo sistema: nombre + clave, elegís el partido y confirmás.</p>
+          <p style="margin:0">El voto es <strong style="color:var(--white)">anónimo</strong> — nadie sabe quién votó a quién. Los resultados los ve el admin y decide si los confirma.</p>
+        </div>
+      </div>
+
+      <!-- Clave -->
+      <div style="background:rgba(34,211,238,0.06);border:1px solid rgba(34,211,238,0.2);border-radius:8px;padding:14px 16px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:#22d3ee;letter-spacing:1px;margin-bottom:6px">🔑 TU CLAVE PERSONAL</div>
+        <p style="margin:0">Cada jugador tiene una clave única — <strong style="color:var(--white)">te llega por mensaje privado</strong>. Sirve para Apuestas, para Votar, y en el futuro para modificar tu propio perfil. Guardala.</p>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div style="padding:14px 24px 20px;border-top:1px solid var(--border);text-align:center">
+      <button onclick="document.getElementById('modal-novedades3').style.display='none';document.getElementById('modal-novedades2').style.display='flex';" style="background:#fbbf24;color:#000;border:none;padding:10px 32px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer">SIGUIENTE →</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;color:#475569;margin-top:10px;letter-spacing:1px">ESTE AVISO APARECE HASTA EL 22/06/2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NOVEDADES 2 — VOL 2 -->
 <div id="modal-novedades2" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:10000;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
   <div style="background:var(--bg-card);border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;border:1px solid rgba(34,211,238,0.3);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
     <!-- Header -->
