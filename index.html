@@ -3663,7 +3663,7 @@ async function loadApuestasMatch(){
   // Get questions
   wrap.innerHTML='<div class="empty">Cargando preguntas...</div>';
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&order=id&select=*`,{headers:SBH});
+    const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${apuestasMatchId}&order=id&select=*`,{headers:SBH});
     const questionsRaw=await r.json();
     const questions=Array.isArray(questionsRaw)?questionsRaw:[];
 
@@ -3673,7 +3673,7 @@ async function loadApuestasMatch(){
     }
 
     // Check if already bet
-    const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&player=eq.${encodeURIComponent(apuestasUser)}&select=*`,{headers:SBH});
+    const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${apuestasMatchId}&player=eq.${encodeURIComponent(apuestasUser)}&select=*`,{headers:SBH});
     const existingRaw=await rb.json();
     const existing=Array.isArray(existingRaw)?existingRaw:[];
 
@@ -3702,7 +3702,7 @@ async function loadApuestasMatch(){
     }
 
     // Get all bets for odds calculation
-    const rallBets=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&select=*`,{headers:SBH});
+    const rallBets=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${apuestasMatchId}&select=*`,{headers:SBH});
     const allBetsRaw=await rallBets.json();
     const allBets=Array.isArray(allBetsRaw)?allBetsRaw:[];
 
@@ -3811,7 +3811,7 @@ async function submitApuestas(){
         headers:{...SBH,'Prefer':'return=minimal'},
         body:JSON.stringify({
           question_id:parseInt(qId),
-          match_id:parseInt(apuestasMatchId),
+          match_id:apuestasMatchId,
           player:apuestasUser,
           answer:ans.answer,
           amount,
@@ -3842,12 +3842,12 @@ async function loadApuestasHistorial(){
     wrap.innerHTML='<div class="empty">Elegí un partido primero en la pestaña Apostar</div>';
     return;
   }
-  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&match_id=eq.${parseInt(apuestasMatchId)}&order=created_at.desc&select=*`,{headers:SBH});
+  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&match_id=eq.${apuestasMatchId}&order=created_at.desc&select=*`,{headers:SBH});
   const betsRaw=await r.json();
   const bets=Array.isArray(betsRaw)?betsRaw:[];
   if(!bets.length){wrap.innerHTML='<div class="empty">No apostaste en este partido todavía</div>';return;}
   // Get questions for this match to show text
-  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&select=*`,{headers:SBH});
+  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${apuestasMatchId}&select=*`,{headers:SBH});
   const questionsRaw=await rq.json();
   const questions=Array.isArray(questionsRaw)?questionsRaw:[];
   const qMap={};questions.forEach(q=>qMap[q.id]=q);
@@ -3947,7 +3947,7 @@ async function addBetQuestion(){
   try{
     const r=await fetch(`${SB_URL}/rest/v1/bet_questions`,{
       method:'POST',headers:{...SBH,'Prefer':'return=minimal'},
-      body:JSON.stringify({match_id:parseInt(matchId),question:q,initial_odds:odds})
+      body:JSON.stringify({match_id:matchId,question:q,initial_odds:odds})
     });
     if(r.ok||r.status===201||r.status===204){
       showToast('Pregunta agregada ✓','ok');
@@ -3970,7 +3970,7 @@ async function loadBetQuestionsList(){
   const matchId=document.getElementById('bet-admin-match-crear').value;
   const el=document.getElementById('bet-questions-list');
   if(!matchId){el.innerHTML='';return;}
-  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${matchId}&order=id`,{headers:SBH});
   const qs=await r.json();
   if(!qs.length){el.innerHTML='<div class="empty" style="font-size:12px">Sin preguntas todavía</div>';return;}
   el.innerHTML=qs.map(q=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;gap:8px">
@@ -3993,7 +3993,7 @@ async function loadBetResultPanel(){
   const el=document.getElementById('bet-result-list');
   document.getElementById('bet-save-results-btn').style.display='none';
   if(!matchId){el.innerHTML='';return;}
-  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${matchId}&order=id`,{headers:SBH});
   const qs=await r.json();
   if(!qs.length){el.innerHTML='<div class="empty">Sin preguntas para este partido</div>';return;}
   el.innerHTML=qs.map(q=>`<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:6px">
@@ -4063,16 +4063,16 @@ async function loadBetAdminView(){
   const matchId=document.getElementById('bet-admin-match-ver').value;
   const el=document.getElementById('bet-admin-view-result');
   if(!matchId){el.innerHTML='';return;}
-  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${matchId}&order=id`,{headers:SBH});
   const qs=await rq.json();
   if(!qs.length){el.innerHTML='<div class="empty">Sin preguntas</div>';return;}
-  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(matchId)}&order=created_at&select=*`,{headers:SBH});
+  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${matchId}&order=created_at&select=*`,{headers:SBH});
   const answersRaw=await ra.json();
   const answers=Array.isArray(answersRaw)?answersRaw:[];
   el.innerHTML=`
     <div style="margin-bottom:12px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:#f87171">Borrar todas las apuestas de este partido y restaurar saldos</div>
-      <button onclick="resetPartido(${parseInt(matchId)})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;white-space:nowrap">🗑️ RESETEAR PARTIDO</button>
+      <button onclick="resetPartido('${matchId}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;white-space:nowrap">🗑️ RESETEAR PARTIDO</button>
     </div>
     ${qs.map(q=>{
     const qAnswers=answers.filter(a=>a.question_id===q.id);
