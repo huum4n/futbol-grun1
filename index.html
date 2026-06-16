@@ -3710,8 +3710,8 @@ async function loadApuestasMatch(){
       const yesTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===true).reduce((s,b)=>s+b.amount,0);
       const noTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===false).reduce((s,b)=>s+b.amount,0);
       const total=yesTotal+noTotal;
-      const yesOdds=total>0?Math.max(1.1,Math.round((total+50)/(yesTotal+25)*10)/10):q.initial_odds;
-      const noOdds=total>0?Math.max(1.1,Math.round((total+50)/(noTotal+25)*10)/10):q.initial_odds;
+      const yesOdds=total>0?Math.max(q.initial_odds*0.7,Math.round(q.initial_odds*Math.pow(0.97,yesTotal/250)*10)/10):q.initial_odds;
+      const noOdds=total>0?Math.max(q.initial_odds*0.7,Math.round(q.initial_odds*Math.pow(0.97,noTotal/250)*10)/10):q.initial_odds;
       return`<div class="card" style="padding:12px" id="bq-${q.id}">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
         <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
