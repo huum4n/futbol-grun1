@@ -3293,7 +3293,7 @@ let votarGdo=null;
 function initVotar(){
   const sel=document.getElementById('votar-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Pepo','Oso','Batata','Bauti','Rodri','Burro','Fede','Pipe','Cholo','Gonza','Nico','Nacho','Paco','Felix','Hueso','Chona','Manu','Manolo','Toro','Lucas','Kuza','Tise','Tony'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   // populate match selector — only from 09/06/2026 onwards
   const ms=document.getElementById('votar-match-sel');
@@ -3435,7 +3435,7 @@ async function loadAdminVotos(){
 function initApuestas(){
   const sel=document.getElementById('apuestas-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Pepo','Oso','Batata','Bauti','Rodri','Burro','Fede','Pipe','Cholo','Gonza','Nico','Nacho','Paco','Felix','Hueso','Chona','Manu','Manolo','Toro','Lucas','Kuza','Tise','Tony'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
 }
 
