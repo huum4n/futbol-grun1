@@ -4041,21 +4041,25 @@ async function loadBetAdminView(){
 }
 
 async function resetPartido(matchId){
-  if(!confirm('¿Resetear TODAS las apuestas de este partido? Se restaurarán los saldos de todos los jugadores.'))return;
-  // Get all answers for this match
+  if(!confirm('¿Resetear TODAS las apuestas de este partido? Los saldos quedarán como antes de apostar.'))return;
   const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${matchId}&select=*`,{headers:SBH});
   const answers=await ra.json();
-  // Restore balances for bets without payout (pending)
+  // Group by player
+  const playerDeltas={};
   for(const bet of answers){
-    if(bet.payout===null){
-      const rb=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{headers:SBH});
-      const bd=await rb.json();
-      if(bd.length){
-        await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{
-          method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
-          body:JSON.stringify({balance:bd[0].balance+bet.amount})
-        });
-      }
+    if(!playerDeltas[bet.player])playerDeltas[bet.player]=0;
+    // Reverse the effect: restore amount, remove payout gain
+    playerDeltas[bet.player]+=(bet.amount-(bet.payout||0));
+  }
+  // Apply deltas to balances
+  for(const [player,delta] of Object.entries(playerDeltas)){
+    const rb=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{headers:SBH});
+    const bd=await rb.json();
+    if(bd.length){
+      await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{
+        method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+        body:JSON.stringify({balance:Math.max(0,bd[0].balance+delta)})
+      });
     }
   }
   // Delete all answers for this match
@@ -4065,7 +4069,7 @@ async function resetPartido(matchId){
     method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
     body:JSON.stringify({result:null,closed:false})
   });
-  showToast('Partido reseteado — saldos restaurados','ok');
+  showToast('Partido reseteado — saldos restaurados correctamente','ok');
   loadBetAdminView();
 }
 
