@@ -3649,7 +3649,7 @@ async function loadApuestasMatch(){
   if(!apuestasMatchId)return;
 
   // Check if closed (after 20:00 Tuesday)
-  const match=DB.matches.find(m=>m._id===apuestasMatchId);
+  const match=DB.matches.find(m=>String(m._id)===String(apuestasMatchId));
   const now=new Date();
   const matchDate=new Date(match.date+'T20:00:00');
   const isClosed=now>=matchDate;
