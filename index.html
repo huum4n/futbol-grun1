@@ -3835,10 +3835,20 @@ async function submitApuestas(){
 async function loadApuestasHistorial(){
   const wrap=document.getElementById('apuestas-historial-wrap');
   wrap.innerHTML='<div class="empty">Cargando...</div>';
-  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&order=created_at.desc&select=*`,{headers:SBH});
+  if(!apuestasMatchId){
+    wrap.innerHTML='<div class="empty">Elegí un partido primero en la pestaña Apostar</div>';
+    return;
+  }
+  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&match_id=eq.${parseInt(apuestasMatchId)}&order=created_at.desc&select=*`,{headers:SBH});
   const betsRaw=await r.json();
   const bets=Array.isArray(betsRaw)?betsRaw:[];
-  if(!bets.length){wrap.innerHTML='<div class="empty">Todavía no apostaste en ningún partido</div>';return;}
+  if(!bets.length){wrap.innerHTML='<div class="empty">No apostaste en este partido todavía</div>';return;}
+  // Get questions for this match to show text
+  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&select=*`,{headers:SBH});
+  const questionsRaw=await rq.json();
+  const questions=Array.isArray(questionsRaw)?questionsRaw:[];
+  const qMap={};questions.forEach(q=>qMap[q.id]=q);
+
   const won=bets.filter(b=>b.payout!==null&&b.payout>b.amount).length;
   const lost=bets.filter(b=>b.payout!==null&&b.payout===0).length;
   const total=bets.filter(b=>b.payout!==null).length;
@@ -3849,15 +3859,18 @@ async function loadApuestasHistorial(){
       <div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#94a3b8">${total>0?Math.round(won/total*100):0}%</div><div style="font-size:10px;color:var(--grey)">ACIERTOS</div></div>
     </div>
   </div>
-  ${bets.slice(0,20).map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px">
-    <div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--white)">${b.answer?'✅ SÍ':'❌ NO'}</div>
-      <div style="font-size:10px;color:var(--grey)">${b.amount}🪙 x${b.odds_at_bet}</div>
-    </div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${b.payout===null?'#94a3b8':b.payout>b.amount?'#4ade80':'#f87171'}">
-      ${b.payout===null?'⏳':b.payout>b.amount?`+${b.payout}🪙`:`-${b.amount}🪙`}
-    </div>
-  </div>`).join('')}`;
+  ${bets.map(b=>{
+    const q=qMap[b.question_id];
+    return`<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--white);margin-bottom:4px">${q?q.question:'Pregunta eliminada'}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:12px;color:#4ade80">✅ SÍ · ${b.amount}🪙 x${b.odds_at_bet}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${b.payout===null?'#94a3b8':b.payout>0?'#4ade80':'#f87171'}">
+          ${b.payout===null?'⏳':b.payout>0?`+${b.payout}🪙`:`-${b.amount}🪙`}
+        </div>
+      </div>
+    </div>`;
+  }).join('')}`;
 }
 
 async function loadApuestasRanking(){
