@@ -4019,21 +4019,54 @@ async function loadBetAdminView(){
   const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(matchId)}&order=created_at&select=*`,{headers:SBH});
   const answersRaw=await ra.json();
   const answers=Array.isArray(answersRaw)?answersRaw:[];
-  el.innerHTML=qs.map(q=>{
+  el.innerHTML=`
+    <div style="margin-bottom:12px;padding:10px 12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:8px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:#f87171">Borrar todas las apuestas de este partido y restaurar saldos</div>
+      <button onclick="resetPartido(${parseInt(matchId)})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#f87171;font-size:11px;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;white-space:nowrap">🗑️ RESETEAR PARTIDO</button>
+    </div>
+    ${qs.map(q=>{
     const qAnswers=answers.filter(a=>a.question_id===q.id);
     const yesCount=qAnswers.filter(a=>a.answer).length;
-    const noCount=qAnswers.filter(a=>!a.answer).length;
     return`<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;margin-bottom:8px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:6px">${q.question} ${q.result===true?'✅':q.result===false?'❌':'⏳'}</div>
-      <div style="font-size:12px;color:var(--grey);margin-bottom:6px">SÍ: ${yesCount} · NO: ${noCount} · Total: ${qAnswers.length}</div>
+      <div style="font-size:12px;color:var(--grey);margin-bottom:6px">SÍ: ${yesCount} · Total: ${qAnswers.length}</div>
       ${qAnswers.map(a=>`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:12px;border-bottom:1px solid var(--border)">
         <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white)">${a.player}</span>
-        <span style="color:${a.answer?'#4ade80':'#f87171'}">${a.answer?'SÍ':'NO'} · ${a.amount}🪙 x${a.odds_at_bet}</span>
+        <span style="color:#4ade80">SÍ · ${a.amount}🪙 x${a.odds_at_bet}</span>
         <span style="color:${a.payout===null?'#94a3b8':a.payout>0?'#4ade80':'#f87171'}">${a.payout===null?'⏳':a.payout>0?`+${a.payout}🪙`:`-${a.amount}🪙`}</span>
-        <button onclick="deleteBetAnswer(${a.id})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:10px">✕</button>
+        <button onclick="deleteBetAnswer(${a.id})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:12px;padding:0 4px">✕</button>
       </div>`).join('')}
     </div>`;
-  }).join('');
+  }).join('')}`;
+}
+
+async function resetPartido(matchId){
+  if(!confirm('¿Resetear TODAS las apuestas de este partido? Se restaurarán los saldos de todos los jugadores.'))return;
+  // Get all answers for this match
+  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${matchId}&select=*`,{headers:SBH});
+  const answers=await ra.json();
+  // Restore balances for bets without payout (pending)
+  for(const bet of answers){
+    if(bet.payout===null){
+      const rb=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{headers:SBH});
+      const bd=await rb.json();
+      if(bd.length){
+        await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{
+          method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+          body:JSON.stringify({balance:bd[0].balance+bet.amount})
+        });
+      }
+    }
+  }
+  // Delete all answers for this match
+  await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${matchId}`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  // Reset question results
+  await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${matchId}`,{
+    method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+    body:JSON.stringify({result:null,closed:false})
+  });
+  showToast('Partido reseteado — saldos restaurados','ok');
+  loadBetAdminView();
 }
 
 async function deleteBetAnswer(id){
