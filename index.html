@@ -1614,6 +1614,14 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
             <button class="btn-p" onclick="saveEditMatch()">GUARDAR CAMBIOS</button>
             <button class="btn-d" onclick="deleteMatch()">Eliminar partido</button>
           </div>
+          <div class="form-group" style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px">
+            <label class="flabel">📰 Crónica del partido</label>
+            <textarea class="finput" id="edit-cronica" rows="6" placeholder="Pegá acá la crónica generada con Claude..." style="resize:vertical;line-height:1.6"></textarea>
+            <button type="button" onclick="guardarCronica()"
+              style="width:100%;margin-top:8px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;padding:9px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px">
+              💾 GUARDAR Y PUBLICAR CRÓNICA
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2242,7 +2250,8 @@ async function loadDB(){
     teams:m.teams||{blanco:[],negro:[]},financista:m.financista||null,
     resultado:m.resultado||null,
     humo:m.humo||[],saf:m.saf||[],mvp_frase:m.mvp_frase||null,
-    guante_de_oro:m.guante_de_oro||null}));
+    guante_de_oro:m.guante_de_oro||null,
+    cronica:m.cronica||null}));
   DB.players=players.map(p=>p.name);
   DB._playerIds={};players.forEach(p=>{DB._playerIds[p.name]=p.id;});
   DB._playerPositions={};players.forEach(p=>{if(p.position)DB._playerPositions[p.name]=p.position;});
@@ -3083,18 +3092,62 @@ function renderPartidos(sorted){
         ${m.financista?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#86efac;margin-top:8px">💰 Pagó la cancha: ${m.financista}</div>`:''}
         ${m.guante_de_oro?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#22d3ee;margin-top:4px">🧤 Guante de Oro: ${m.guante_de_oro}</div>`:''}
         ${goals.length?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px;margin-bottom:5px">⚽ GOLES</div><div class="player-chips">${goals.map(([n,g])=>`<div class="chip">${n}: ${g}</div>`).join('')}</div>`:''}
-        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
-          <div id="cronica-${idx}" style="font-size:13px;color:var(--grey-light);line-height:1.7;display:none"></div>
-          <button onclick="event.stopPropagation();generarCronica(${idx})" id="cronica-btn-${idx}"
-            style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;padding:5px 14px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;margin-top:4px">
-            📰 Generar crónica con IA
-          </button>
-        </div>
+${m.cronica?`<div style='margin-top:12px;border-top:1px solid var(--border);padding-top:10px'><div style='font-size:11px;font-weight:700;letter-spacing:2px;color:#a5b4fc;margin-bottom:6px'>📰 CRÓNICA</div><div style='font-size:13px;color:var(--grey-light);line-height:1.8;white-space:pre-wrap'>${m.cronica}</div></div>`:''}
     </div>`;
   }).join('');
 }
 function togglePartido(idx){
   document.getElementById('pb-'+idx).classList.toggle('open');
+}
+
+async function generarCronicaAdmin(){
+  var btn=document.getElementById('cronica-gen-btn');
+  var el=document.getElementById('edit-cronica');
+  if(!btn||!el)return;
+  var idx=parseInt(document.getElementById('edit-idx').value);
+  var m=DB.matches[idx];
+  if(!m){showToast('Guardá el partido primero','err');return;}
+  btn.textContent='Generando...';btn.disabled=true;
+  var ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var goals=Object.entries(m.goals||{}).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  var goalsStr=goals.length?goals.map(function(e){return e[1]>1?e[0]+' ('+e[1]+')':e[0];}).join(', '):'ninguno';
+  var bl=(m.teams&&m.teams.blanco)||[];
+  var ng=(m.teams&&m.teams.negro)||[];
+  var jugadores=Object.keys(m.attendance||{}).filter(function(k){var v=m.attendance[k];return v==='X'||v==='B'||v==='N';});
+  var res=(m.resultado||'').toLowerCase();
+  var ganador=res==='blanco'?'Blanco':res==='negro'?'Negro':res==='empate'?'empate':'sin resultado aún';
+  var prompt='Sos el cronista oficial de Brunato FC, un grupo de amigos que juega al fútbol los martes en GRUN, Buenos Aires.'
+    +' Escribí una crónica breve y graciosa (3-4 párrafos) del siguiente partido, en español argentino, tono informal y humorístico.\n\n'
+    +'Fecha: '+ds+'\nPartido N°: '+m.n+'\n'
+    +(bl.length?'Equipo Blanco: '+bl.join(', ')+'\n':'')
+    +(ng.length?'Equipo Negro: '+ng.join(', ')+'\n':'')
+    +'Resultado: Ganó '+ganador+'\n'
+    +'Goles: '+goalsStr+'\n'
+    +(m.mvp?'Brunato (MVP): '+m.mvp+(m.mvp_frase?' — frase: "'+m.mvp_frase+'"':'')+'\n':'')
+    +(m.guante_de_oro?'Guante de Oro: '+m.guante_de_oro+'\n':'')
+    +(m.financista?'Pagó la cancha: '+m.financista+'\n':'')
+    +(m.humo&&m.humo.length?'Humaron: '+m.humo.join(', ')+'\n':'')
+    +'Presentes ('+jugadores.length+'): '+jugadores.join(', ')+'\n\n'
+    +'Mencioná a jugadores por nombre, el resultado, los goles y el Brunato. No inventes datos.';
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    var data=await r.json();
+    var text=data.content&&data.content[0]&&data.content[0].text;
+    if(text){el.value=text;showToast('Crónica generada — revisala y guardá','ok');}
+    else showToast('Error al generar','err');
+  }catch(e){showToast('Error de conexión','err');}
+  btn.textContent='✨ GENERAR';btn.disabled=false;
+}
+
+async function guardarCronica(){
+  var el=document.getElementById('edit-cronica');
+  var idx=parseInt(document.getElementById('edit-idx').value);
+  var m=DB.matches[idx];
+  if(!el||!m)return;
+  var cronica=el.value.trim()||null;
+  await sbPatch('matches',m._id,{cronica});
+  DB.matches[idx].cronica=cronica;
+  showToast(cronica?'Crónica publicada ✓':'Crónica eliminada','ok');
 }
 
 async function generarCronica(idx){
@@ -4564,6 +4617,7 @@ function openEditMatch(idx){
   if(efg)efg.style.display=m.mvp?'block':'none';
   document.getElementById('edit-financista').value=m.financista||'';
   if(document.getElementById('edit-gdo'))document.getElementById('edit-gdo').value=m.guante_de_oro||'';
+  if(document.getElementById('edit-cronica'))document.getElementById('edit-cronica').value=m.cronica||'';
   if(m.resultado)setResultado('edit',m.resultado);else resetResultado('edit');
   epsState={};
   const mTeams=m.teams||{blanco:[],negro:[]};
@@ -4601,6 +4655,7 @@ async function saveEditMatch(){
   const mvp_frase=document.getElementById('edit-mvp-frase')?document.getElementById('edit-mvp-frase').value.trim()||null:null;
   const financista=document.getElementById('edit-financista').value.trim()||null;
   const guante_de_oro=document.getElementById('edit-gdo')?document.getElementById('edit-gdo').value.trim()||null:null;
+  const cronica_val=document.getElementById('edit-cronica')?document.getElementById('edit-cronica').value.trim()||null:null;
   const resultado=document.getElementById('edit-resultado').value||null;
   const attendance={};
   const teams_data={blanco:[],negro:[]};
@@ -4615,7 +4670,7 @@ async function saveEditMatch(){
   const goals=getGoalsFromUI(epsState);
   const matchId=DB.matches[idx]._id;
   try{
-    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
+    await sbPatch('matches',matchId,{date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,cronica:cronica_val,humo:e_humo.length?e_humo:null,saf:e_saf.length?e_saf:null});
     DB.matches[idx]={...DB.matches[idx],date,n:x,type,attendance,mvp,mvp_frase,goals,teams:teams_data,financista,resultado,guante_de_oro,humo:e_humo,saf:e_saf};
     DB.matches.sort((a,b)=>a.date.localeCompare(b.date));
     refreshAll();renderAdminMatchList();backToList();
