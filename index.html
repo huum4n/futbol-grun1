@@ -3651,97 +3651,117 @@ async function loadApuestasMatch(){
   // Check if closed (after 20:00 Tuesday)
   const match=DB.matches.find(m=>String(m._id)===String(apuestasMatchId));
   const now=new Date();
-  const matchDate=new Date(match.date+'T20:00:00');
-  const isClosed=now>=matchDate;
+  let isClosed=false;
+  if(match){
+    const matchDate=new Date(match.date+'T20:00:00');
+    isClosed=now>=matchDate;
+  }
 
   // Get questions
-  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&order=id`,{headers:SBH});
-  const questions=await r.json();
+  wrap.innerHTML='<div class="empty">Cargando preguntas...</div>';
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&order=id&select=*`,{headers:SBH});
+    const questionsRaw=await r.json();
+    const questions=Array.isArray(questionsRaw)?questionsRaw:[];
 
-  if(!questions.length){
-    wrap.innerHTML='<div class="empty">No hay preguntas cargadas para este partido todavía.</div>';
-    return;
-  }
+    if(!questions.length){
+      wrap.innerHTML='<div class="empty">No hay preguntas cargadas para este partido todavía.</div>';
+      return;
+    }
 
-  // Check if already bet
-  const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&player=eq.${encodeURIComponent(apuestasUser)}`,{headers:SBH});
-  const existing=await rb.json();
+    // Check if already bet
+    const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&player=eq.${encodeURIComponent(apuestasUser)}&select=*`,{headers:SBH});
+    const existingRaw=await rb.json();
+    const existing=Array.isArray(existingRaw)?existingRaw:[];
 
-  if(existing.length>0){
-    // Show existing bets
+    if(existing.length>0){
+      wrap.innerHTML=questions.map(q=>{
+        const myBet=existing.find(b=>b.question_id===q.id);
+        const resultIcon=q.result===true?'✅':q.result===false?'❌':'⏳';
+        const won=myBet&&q.result!==null&&myBet.answer===q.result;
+        return`<div class="card" style="padding:12px;${won?'border:1px solid rgba(74,222,128,0.4)':''}">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
+          ${myBet?`<div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-size:12px;color:${myBet.answer?'#4ade80':'#f87171'}">${myBet.answer?'✅ SÍ':'❌ NO'} · ${myBet.amount}🪙 x${myBet.odds_at_bet}</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${won?'#4ade80':q.result!==null?'#f87171':'#94a3b8'}">${q.result!==null?(won?`+${myBet.payout||0}🪙`:`-${myBet.amount}🪙`):'⏳'} ${resultIcon}</div>
+          </div>`:`<div style="font-size:11px;color:var(--grey)">No apostaste en esta</div>`}
+        </div>`;
+      }).join('');
+      document.getElementById('apuestas-ya-apostó').style.display='block';
+      document.getElementById('apuestas-form-submit').style.display='none';
+      confirmWrap.style.display='block';
+      return;
+    }
+
+    if(isClosed){
+      wrap.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:28px;margin-bottom:8px">🔒</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:#f87171;letter-spacing:2px">APUESTAS CERRADAS</div><div style="font-size:12px;color:var(--grey);margin-top:6px">Las apuestas cerraron a las 20:00. Resultados pendientes.</div></div>';
+      return;
+    }
+
+    // Get all bets for odds calculation
+    const rallBets=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&select=*`,{headers:SBH});
+    const allBetsRaw=await rallBets.json();
+    const allBets=Array.isArray(allBetsRaw)?allBetsRaw:[];
+
     wrap.innerHTML=questions.map(q=>{
-      const myBet=existing.find(b=>b.question_id===q.id);
-      const resultIcon=q.result===true?'✅':q.result===false?'❌':'⏳';
-      const won=myBet&&q.result!==null&&myBet.answer===q.result;
-      return`<div class="card" style="padding:12px;${won?'border:1px solid rgba(74,222,128,0.4)':''}">
+      const yesTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===true).reduce((s,b)=>s+b.amount,0);
+      const noTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===false).reduce((s,b)=>s+b.amount,0);
+      const total=yesTotal+noTotal;
+      const yesOdds=total>0?Math.max(1.1,Math.round((total+50)/(yesTotal+25)*10)/10):q.initial_odds;
+      const noOdds=total>0?Math.max(1.1,Math.round((total+50)/(noTotal+25)*10)/10):q.initial_odds;
+      return`<div class="card" style="padding:12px" id="bq-${q.id}">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
-        ${myBet?`<div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:12px;color:${myBet.answer?'#4ade80':'#f87171'}">${myBet.answer?'✅ SÍ':'❌ NO'} · ${myBet.amount}🪙 x${myBet.odds_at_bet}</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${won?'#4ade80':q.result!==null?'#f87171':'#94a3b8'}">${q.result!==null?(won?`+${myBet.payout||0}🪙`:`-${myBet.amount}🪙`):'⏳'} ${resultIcon}</div>
-        </div>`:`<div style="font-size:11px;color:var(--grey)">No apostaste en esta</div>`}
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <button onclick="selectBetAnswer(${q.id},'yes',${yesOdds},this)" id="bq-yes-${q.id}"
+            style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.06);color:#4ade80;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px">
+            ✅ SÍ &nbsp;<span style="font-size:12px">x${yesOdds}</span>
+          </button>
+          <button onclick="deselectBet(${q.id})" id="bq-desel-${q.id}"
+            style="display:none;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:var(--grey);cursor:pointer;font-size:11px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">
+            ✕ Sacar
+          </button>
+        </div>
+        <div id="bq-amount-${q.id}" style="display:none">
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--grey);white-space:nowrap">Monedas (máx 250)</label>
+            <input type="number" min="10" max="250" value="100" id="bq-amt-${q.id}"
+              style="flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--white);padding:6px 10px;border-radius:6px;font-size:14px"
+              oninput="updateBetResumen()">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#4ade80;white-space:nowrap" id="bq-pot-${q.id}"></div>
+          </div>
+        </div>
       </div>`;
     }).join('');
-    document.getElementById('apuestas-ya-apostó').style.display='block';
-    document.getElementById('apuestas-form-submit').style.display='none';
     confirmWrap.style.display='block';
-    return;
+    document.getElementById('apuestas-ya-apostó').style.display='none';
+    document.getElementById('apuestas-form-submit').style.display='block';
+  }catch(e){
+    console.error('loadApuestasMatch error:',e);
+    wrap.innerHTML=`<div class="empty">Error al cargar: ${e.message}</div>`;
   }
-
-  if(isClosed){
-    wrap.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:28px;margin-bottom:8px">🔒</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:#f87171;letter-spacing:2px">APUESTAS CERRADAS</div><div style="font-size:12px;color:var(--grey);margin-top:6px">Las apuestas cerraron a las 20:00. Resultados pendientes.</div></div>';
-    return;
-  }
-
-  // Get all bets for odds calculation
-  const rallBets=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}`,{headers:SBH});
-  const allBets=await rallBets.json();
-
-  wrap.innerHTML=questions.map(q=>{
-    const yesTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===true).reduce((s,b)=>s+b.amount,0);
-    const noTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===false).reduce((s,b)=>s+b.amount,0);
-    const total=yesTotal+noTotal;
-    const yesOdds=total>0?Math.max(1.05,Math.round((total+50)/(yesTotal+25)*10)/10):q.initial_odds;
-    const noOdds=total>0?Math.max(1.05,Math.round((total+50)/(noTotal+25)*10)/10):q.initial_odds;
-    return`<div class="card" style="padding:12px" id="bq-${q.id}">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button onclick="selectBetAnswer(${q.id},'yes',${yesOdds},this)" id="bq-yes-${q.id}"
-          style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.06);color:#4ade80;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px">
-          ✅ SÍ &nbsp;<span style="font-size:12px">x${yesOdds}</span>
-        </button>
-        <button onclick="selectBetAnswer(${q.id},'no',${noOdds},this)" id="bq-no-${q.id}"
-          style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:#f87171;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px">
-          ❌ NO &nbsp;<span style="font-size:12px">x${noOdds}</span>
-        </button>
-      </div>
-      <div id="bq-amount-${q.id}" style="display:none">
-        <div style="display:flex;align-items:center;gap:8px">
-          <label style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--grey);white-space:nowrap">Monedas (máx 250)</label>
-          <input type="number" min="10" max="250" value="100" id="bq-amt-${q.id}"
-            style="flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--white);padding:6px 10px;border-radius:6px;font-size:14px"
-            oninput="updateBetResumen()">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#4ade80;white-space:nowrap" id="bq-pot-${q.id}"></div>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  confirmWrap.style.display='block';
-  document.getElementById('apuestas-ya-apostó').style.display='none';
-  document.getElementById('apuestas-form-submit').style.display='block';
 }
 
 function selectBetAnswer(qId,answer,odds,btn){
-  const isYes=answer==='yes';
   const yesBtn=document.getElementById(`bq-yes-${qId}`);
-  const noBtn=document.getElementById(`bq-no-${qId}`);
-  yesBtn.style.fontWeight=isYes?'900':'normal';
-  yesBtn.style.borderColor=isYes?'#4ade80':'rgba(74,222,128,0.3)';
-  yesBtn.style.background=isYes?'rgba(74,222,128,0.2)':'rgba(74,222,128,0.06)';
-  noBtn.style.fontWeight=!isYes?'900':'normal';
-  noBtn.style.borderColor=!isYes?'#f87171':'rgba(239,68,68,0.3)';
-  noBtn.style.background=!isYes?'rgba(239,68,68,0.2)':'rgba(239,68,68,0.06)';
+  const deselBtn=document.getElementById(`bq-desel-${qId}`);
+  yesBtn.style.borderColor='#4ade80';
+  yesBtn.style.background='rgba(74,222,128,0.2)';
+  yesBtn.style.fontWeight='900';
+  if(deselBtn)deselBtn.style.display='block';
   document.getElementById(`bq-amount-${qId}`).style.display='block';
-  apuestasAnswers[qId]={answer:isYes,odds};
+  apuestasAnswers[qId]={answer:true,odds};
+  updateBetResumen();
+}
+
+function deselectBet(qId){
+  const yesBtn=document.getElementById(`bq-yes-${qId}`);
+  const deselBtn=document.getElementById(`bq-desel-${qId}`);
+  yesBtn.style.borderColor='rgba(74,222,128,0.3)';
+  yesBtn.style.background='rgba(74,222,128,0.06)';
+  yesBtn.style.fontWeight='normal';
+  if(deselBtn)deselBtn.style.display='none';
+  document.getElementById(`bq-amount-${qId}`).style.display='none';
+  delete apuestasAnswers[qId];
   updateBetResumen();
 }
 
@@ -3762,9 +3782,10 @@ function updateBetResumen(){
   const resumen=document.getElementById('apuestas-resumen');
   if(resumen){
     const saldoRestante=apuestasSaldo-totalBet;
-    resumen.innerHTML=`<strong style="color:var(--white)">Resumen:</strong><br>${lines.join('<br>')}<br><br>Total apostado: <strong style="color:#fbbf24">${totalBet}🪙</strong> · Saldo restante: <strong style="color:${saldoRestante<0?'#f87171':'#4ade80'}">${saldoRestante}🪙</strong>`;
+    const sinSaldo=saldoRestante<0;
+    resumen.innerHTML=`<strong style="color:var(--white)">Resumen:</strong><br>${lines.join('<br>')}<br><br>Total apostado: <strong style="color:#fbbf24">${totalBet}🪙</strong> · Saldo restante: <strong style="color:${sinSaldo?'#f87171':'#4ade80'}">${saldoRestante}🪙</strong>${sinSaldo?`<br><span style="color:#f87171;font-weight:700">⚠️ Saldo insuficiente — reducí el monto de alguna apuesta</span>`:''}`;
     const btn=document.querySelector('[onclick="submitApuestas()"]');
-    if(btn)btn.disabled=saldoRestante<0;
+    if(btn){btn.disabled=sinSaldo;btn.style.opacity=sinSaldo?'0.4':'1';}
   }
 }
 
