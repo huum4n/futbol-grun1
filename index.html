@@ -919,6 +919,10 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         <div class="punto-pill"><span class="ico">📅</span><span class="txt">Desde <span class="pts">Jul 2025</span></span></div>
       </div>
     </div>
+    <div class="card" id="efemerides-card" style="display:none">
+      <div class="card-title">📅 Un día como hoy</div>
+      <div id="efemerides-content"></div>
+    </div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
     <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:var(--white);margin-bottom:3px">🏆 BRUNATO S.A.</div>
@@ -1871,6 +1875,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="atab active" onclick="statsTab('mes',this)">📅 Por mes</button>
       <button class="atab" onclick="statsTab('evolucion',this)">📈 Evolución</button>
       <button class="atab" onclick="statsTab('raras',this)">🎲 Stats raras</button>
+      <button class="atab" onclick="statsTab('hof',this)">🏆 Hall of Fame</button>
       <button class="atab" onclick="statsTab('heatmap',this)">🗓️ Mapa asistencia</button>
       <button class="atab" onclick="statsTab('heatmap-partidos',this)">🏆 Mapa partidos</button>
     </div>
@@ -1899,6 +1904,10 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     </div>
 
     <!-- HEATMAP -->
+    <div id="stats-hof" class="apanel">
+      <div id="hof-content"></div>
+    </div>
+
     <div id="stats-heatmap" class="apanel">
       <div id="heatmap-content" style="overflow-x:auto"></div>
     </div>
@@ -2763,6 +2772,7 @@ function refreshAll(){
     safeRender(()=>renderRanking(rf.stats,rankingF),'renderRanking');
   }catch(e){console.error('rankFilter error:',e);safeRender(()=>renderRanking(stats,ranking),'renderRanking');}
   safeRender(()=>renderInicio(stats,sorted,ranking),'renderInicio');
+  safeRender(()=>renderEfemerides(sorted),'renderEfemerides');
   safeRender(()=>renderPartidos(sorted),'renderPartidos');
   safeRender(()=>renderJugadores(stats,ranking),'renderJugadores');
   safeRender(()=>renderGoleadores(sorted),'renderGoleadores');
@@ -2776,6 +2786,41 @@ function refreshAll(){
 }
 
 // INICIO
+function renderEfemerides(sorted){
+  var now=new Date();
+  var month=now.getMonth()+1;
+  var day=now.getDate();
+  var lastYear=now.getFullYear()-1;
+  var nearby=sorted.filter(function(m){
+    var d=new Date(m.date+'T12:00:00');
+    if(d.getFullYear()!==lastYear)return false;
+    var mDiff=Math.abs((d.getMonth()+1-month)*30+(d.getDate()-day));
+    return mDiff<=7;
+  }).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var card=document.getElementById('efemerides-card');
+  var el=document.getElementById('efemerides-content');
+  if(!nearby.length){if(card)card.style.display='none';return;}
+  if(card)card.style.display='block';
+  var html='';
+  nearby.forEach(function(m){
+    var ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    var res=(m.resultado||'').toLowerCase();
+    var resLabel=res==='blanco'?'Gan\xF3 Blanco':res==='negro'?'Gan\xF3 Negro':res==='empate'?'Empate':'Sin resultado';
+    var resColor=res==='empate'?'#94a3b8':'#4ade80';
+    var mvpStr=m.mvp?'<div style="font-size:12px;color:#fbbf24;margin-top:2px">Brunato: '+m.mvp+'</div>':'';
+    var goals=Object.entries(m.goals||{}).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+    var goalsStr=goals.length?'<div style="font-size:12px;color:var(--grey-light);margin-top:2px">Goles: '+goals.map(function(e){return e[1]>1?e[0]+' x'+e[1]:e[0];}).join(', ')+'</div>':'';
+    var jugadores=m.attendance?Object.keys(m.attendance).filter(function(k){var v=m.attendance[k];return v==='X'||v==='B'||v==='N';}).length:0;
+    html+='<div style="padding:10px 0;border-bottom:1px solid var(--border)">'
+         +'<div style="font-size:11px;color:var(--grey);margin-bottom:4px">'+ds+'</div>'
+         +'<div style="font-size:15px;font-weight:700;color:'+resColor+'">'+resLabel+'</div>'
+         +mvpStr+goalsStr
+         +'<div style="font-size:11px;color:var(--grey);margin-top:2px">'+jugadores+' jugadores</div>'
+         +'</div>';
+  });
+  el.innerHTML=html;
+}
+
 function renderInicio(stats,sorted,ranking){
   const f11=sorted.filter(m=>m.type==='futbol11').length;
   document.getElementById('hero-strip').innerHTML=`
@@ -3038,12 +3083,75 @@ function renderPartidos(sorted){
         ${m.financista?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#86efac;margin-top:8px">💰 Pagó la cancha: ${m.financista}</div>`:''}
         ${m.guante_de_oro?`<div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;color:#22d3ee;margin-top:4px">🧤 Guante de Oro: ${m.guante_de_oro}</div>`:''}
         ${goals.length?`<div style="color:var(--teal);font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-top:8px;margin-bottom:5px">⚽ GOLES</div><div class="player-chips">${goals.map(([n,g])=>`<div class="chip">${n}: ${g}</div>`).join('')}</div>`:''}
-      </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+          <div id="cronica-${idx}" style="font-size:13px;color:var(--grey-light);line-height:1.7;display:none"></div>
+          <button onclick="event.stopPropagation();generarCronica(${idx})" id="cronica-btn-${idx}"
+            style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3);color:#a5b4fc;font-size:11px;padding:5px 14px;border-radius:6px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;margin-top:4px">
+            📰 Generar crónica con IA
+          </button>
+        </div>
     </div>`;
   }).join('');
 }
 function togglePartido(idx){
   document.getElementById('pb-'+idx).classList.toggle('open');
+}
+
+async function generarCronica(idx){
+  var btn=document.getElementById('cronica-btn-'+idx);
+  var el=document.getElementById('cronica-'+idx);
+  if(!btn||!el)return;
+  var sorted=[...DB.matches].sort(function(a,b){return a.date.localeCompare(b.date);});
+  var m=sorted[idx];
+  if(!m)return;
+  btn.textContent='Generando...';
+  btn.disabled=true;
+
+  var ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  var goals=Object.entries(m.goals||{}).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  var goalsStr=goals.map(function(e){return e[1]>1?e[0]+' ('+e[1]+')':e[0];}).join(', ');
+  var bl=(m.teams&&m.teams.blanco)||[];
+  var ng=(m.teams&&m.teams.negro)||[];
+  var jugadores=Object.keys(m.attendance||{}).filter(function(k){var v=m.attendance[k];return v==='X'||v==='B'||v==='N';});
+  var res=(m.resultado||'').toLowerCase();
+  var ganador=res==='blanco'?'Blanco':res==='negro'?'Negro':res==='empate'?'empate':'sin resultado';
+
+  var prompt='Sos el cronista oficial de Brunato FC, un grupo de amigos que juega al fútbol los martes en GRUN, Buenos Aires. '
+    +'Escribí una crónica breve y graciosa (3-4 párrafos) del siguiente partido, en español argentino, tono informal y humorístico.\n\n'
+    +'Fecha: '+ds+'\n'
+    +'Partido N°: '+m.n+'\n'
+    +'Equipos — Blanco: '+bl.join(', ')+(ng.length?'\nEquipo Negro: '+ng.join(', '):'')+'\n'
+    +'Resultado: Ganó '+ganador+'\n'
+    +(goals.length?'Goles: '+goalsStr+'\n':'Sin goles.\n')
+    +(m.mvp?'Brunato (MVP) de la fecha: '+m.mvp+(m.mvp_frase?' — frase: "'+m.mvp_frase+'"':'')+'\n':'')
+    +(m.guante_de_oro?'Guante de Oro (mejor arquero): '+m.guante_de_oro+'\n':'')
+    +(m.financista?'Pagó la cancha: '+m.financista+'\n':'')
+    +(m.humo&&m.humo.length?'Humaron (no vinieron): '+m.humo.join(', ')+'\n':'')
+    +'Jugadores presentes ('+jugadores.length+'): '+jugadores.join(', ')+'\n\n'
+    +'La crónica debe mencionar a jugadores por nombre, el resultado, los goles, el Brunato y algún dato gracioso. Sin inventar datos que no estén arriba.';
+
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    var data=await r.json();
+    var text=data.content&&data.content[0]&&data.content[0].text;
+    if(text){
+      el.innerHTML=text.replace(/\n\n/g,'</p><p style="margin:8px 0">').replace(/\n/g,'<br>');
+      el.style.display='block';
+      btn.textContent='↺ Regenerar';
+      btn.disabled=false;
+    } else {
+      btn.textContent='📰 Generar crónica con IA';
+      btn.disabled=false;
+    }
+  }catch(e){
+    btn.textContent='📰 Generar crónica con IA';
+    btn.disabled=false;
+    console.error('cronica error:',e);
+  }
 }
 
 // JUGADORES
@@ -3433,7 +3541,7 @@ let votarGdo=null;
 function initVotar(){
   const sel=document.getElementById('votar-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   // populate match selector — only from 09/06/2026 onwards
   const ms=document.getElementById('votar-match-sel');
@@ -3583,7 +3691,7 @@ let apuestasAnswers={};// questionId -> {answer:bool, amount:int}
 function initApuestas(){
   const sel=document.getElementById('apuestas-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
 }
 
@@ -4834,6 +4942,42 @@ async function delEMISAOVideo(i){
 // ESTADÍSTICAS — TABS
 // ══════════════════════════════════════════
 let evoChart = null;
+function renderHallOfFame(){
+  var el=document.getElementById('hof-content');
+  if(!el)return;
+  var allStats=getStats().stats;
+  var sorted=[...DB.matches].sort(function(a,b){return a.date.localeCompare(b.date);});
+  function getWins(n){var w=0;sorted.forEach(function(m){var v=m.attendance&&m.attendance[n];if(!v||!['X','B','N'].includes(v))return;var res=(m.resultado||'').toLowerCase();var bl=(m.teams&&m.teams.blanco)||[];var ng=(m.teams&&m.teams.negro)||[];if((bl.includes(n)&&res==='blanco')||(ng.includes(n)&&res==='negro'))w++;});return w;}
+  function getLosses(n){var l=0;sorted.forEach(function(m){var v=m.attendance&&m.attendance[n];if(!v||!['X','B','N'].includes(v))return;var res=(m.resultado||'').toLowerCase();var bl=(m.teams&&m.teams.blanco)||[];var ng=(m.teams&&m.teams.negro)||[];if((bl.includes(n)&&res==='negro')||(ng.includes(n)&&res==='blanco'))l++;});return l;}
+  function getGoals(n){var g=0;sorted.forEach(function(m){g+=(m.goals&&m.goals[n])||0;});return g;}
+  var records=[
+    {icon:'🏆',title:'Más puntos',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].pts];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' pts';}},
+    {icon:'💪',title:'Más victorias',vals:Object.entries(allStats).map(function(e){return[e[0],getWins(e[0])];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' victorias';}},
+    {icon:'⚽',title:'Más goles',vals:Object.entries(allStats).map(function(e){return[e[0],getGoals(e[0])];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' goles';}},
+    {icon:'🥇',title:'Más Brunatos',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].mvpCount||0];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+'x';}},
+    {icon:'🧤',title:'Más Guantes de Oro',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].gdoCount||0];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+'x';}},
+    {icon:'📅',title:'Más partidos jugados',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].played];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' partidos';}},
+    {icon:'🔥',title:'Racha victorias más larga',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].maxWinStreak||e[1].maxS||0];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' seguidas';}},
+    {icon:'💨',title:'Más humos',vals:Object.entries(allStats).map(function(e){return[e[0],e[1].humoCount||0];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+'x';}},
+    {icon:'💀',title:'Más derrotas',vals:Object.entries(allStats).map(function(e){return[e[0],getLosses(e[0])];}).sort(function(a,b){return b[1]-a[1];}).filter(function(e){return e[1]>0;}),lbl:function(v){return v+' derrotas';}},
+  ];
+  var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">';
+  records.forEach(function(rec){
+    if(!rec.vals.length)return;
+    var w=rec.vals[0][0];var v=rec.vals[0][1];
+    html+='<div class="card" style="text-align:center;padding:16px">'
+      +'<div style="font-size:26px;margin-bottom:6px">'+rec.icon+'</div>'
+      +'<div style="font-size:10px;color:var(--grey);letter-spacing:2px;margin-bottom:6px">'+rec.title.toUpperCase()+'</div>'
+      +'<div style="font-size:22px;font-weight:700;color:var(--white);cursor:pointer" onclick="openModal(\''+w+'\')">'+w+'</div>'
+      +'<div style="font-size:14px;color:var(--teal);font-weight:700">'+rec.lbl(v)+'</div>'
+      +(rec.vals[1]?'<div style="font-size:11px;color:var(--grey);margin-top:4px">2° '+rec.vals[1][0]+' ('+rec.lbl(rec.vals[1][1])+')</div>':'')
+      +(rec.vals[2]?'<div style="font-size:11px;color:var(--grey)">3° '+rec.vals[2][0]+' ('+rec.lbl(rec.vals[2][1])+')</div>':'')
+      +'</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 function statsTab(id, btn){
   document.querySelectorAll('#stats-tabs .atab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('#s-estadisticas .apanel').forEach(p=>p.classList.remove('active'));
@@ -4841,6 +4985,7 @@ function statsTab(id, btn){
   document.getElementById('stats-'+id).classList.add('active');
   if(id==='evolucion' && !evoChart){try{renderEvolucion();}catch(e){console.error('renderEvolucion:',e);}}
   if(id==='raras'){try{renderWeirdStats();}catch(e){console.error('renderWeirdStats:',e);document.getElementById('raras-grid').innerHTML='<div class="empty">Error: '+e.message+'</div>';}}
+  if(id==='hof'){try{renderHallOfFame();}catch(e){console.error('renderHallOfFame:',e);}}
   if(id==='heatmap'){try{renderHeatmap();}catch(e){console.error('renderHeatmap:',e);}}
   if(id==='heatmap-partidos'){try{renderHeatmapPartidos();}catch(e){console.error('renderHeatmapPartidos:',e);}}
   if(id==='votar'){try{initVotar();}catch(e){console.error('initVotar:',e);}}
@@ -5938,7 +6083,7 @@ function setWCFilter(f,btn){
 // ══════════════════════════════════════════
 // FAQ
 // ══════════════════════════════════════════
-const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. Ganaste el Guante de Oro +1 punto. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 3 o más victorias consecutivas activas. No se pierde si no jugás, solo si perdés o empatás.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#22d3ee'>🧤 GDO ×N</strong> — Ganó el Guante de Oro N veces. El mejor arquero del partido. Suma +1 pt cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 25 partidos jugados, 76% de asistencia, 12 victorias. Y lo más importante: ganador del Brunato del Año 2025, el premio más prestigioso del grupo. Tiene sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."]];
+const FAQ_DATA = [{"cat": "⚽ El Partido"}, ["¿Cuándo es el próximo partido?", "El martes. Siempre el martes."], ["¿Cómo se arman los equipos?", "Actualmente de forma artesanal. Se trabaja en una solución algorítmica propuesta por Emi Costa el 07/06/2026."], ["¿Quién arma los equipos si se bajaron los DTs?", "El Primo Brunato."], ["¿Qué pasa si falto un martes?", "Tu racha se rompe, tu posición en el ranking puede caer, y hay una alta probabilidad de que quede documentado para siempre."], ["¿Puedo ir a ver sin jugar?", "Sí. No suma puntos pero te ganás el badge de Hincha y no rompe la racha. El grupo es inclusivo."], ["¿Hay árbitro?", "Hay criterio colectivo. No siempre coinciden."], ["¿Tiene losa radiante la cancha?", "Según Felix, esa era la pregunta. La respuesta sigue siendo un misterio."], ["¿Hay que comprar más ferno?", "Sí, según Manolo."], ["¿Puedo ver los videos del partido?", "Sí. En <a href=\"https://beelup.com/ar\" target=\"_blank\" style=\"color:var(--teal)\">beelup.com/ar</a> — buscá BRUNATO FC · Fútbol 8 · Cancha 4. Solo 1 semana para atrás."], {"cat": "📊 Puntos y Ranking"}, ["¿Cómo se calculan los puntos?", "El sistema es simple: ganaste +3 puntos, empataste +1 punto, perdiste 0 puntos. Ganaste el Brunato del partido +2 puntos. Ganaste el Guante de Oro +1 punto. El Humo, el SAF y ir a ver no suman ni restan. El ranking refleja pura performance deportiva."], ["¿Cómo se calcula el % de asistencia?", "Se calcula desde el primer partido que jugó cada uno. Jugaste (X), fuiste a ver (O) y SAF cuentan como asistencia. Solo la ausencia total baja el porcentaje."], ["¿Qué es el Humo?", "El que confirmó que iba y no apareció. No resta puntos pero el badge 💨 queda en el perfil para siempre con el contador de humadas. La vergüenza es el castigo."], ["¿Qué es el SAF?", "Sin Actividad Física. Confirmó, no jugó, pero fue a ver igual. No suma ni resta puntos, pero mantiene la racha y el % de asistencia. La ambulancia 🚑 lo dice todo."], ["¿Si soy Humo puedo recuperarme?", "Ni debería ser una pregunta. Pero ante la duda... No, pensá 2 veces antes de anotarte y bajarte."], ["¿Se puede apelar algún dato?", "No. El sistema es implacable."], ["¿Un gol hecho el martes cuenta si lo reclamo el miércoles?", "Según Manolo, no. Y Manolo tiene razón."], ["Me hace ruido el señor podio, casualmente creó el sistema de puntos.", "No trates de entenderla."], {"cat": "🏅 Badges"}, ["¿Qué significan los badges?", "<strong style='color:var(--teal)'>Fundador</strong> — Estuvo en alguno de los primeros 3 partidos (jul 2025) y tiene más del 50% de asistencia total.<br><br><strong style='color:#93C5FD'>Titular</strong> — Está en el top 16 del ranking.<br><br><strong style='color:#FCA5A5'>🔥 En racha</strong> — Lleva 3 o más victorias consecutivas activas. No se pierde si no jugás, solo si perdés o empatás.<br><br><strong style='color:var(--grey-light)'>Fantasma</strong> — Apareció 1 o 2 veces y desapareció.<br><br><strong style='color:var(--teal-light)'>Hincha</strong> — Fue a ver al menos una vez. De por vida. No suma puntos.<br><br><strong style='color:#86efac'>💰 Financista ×N</strong> — Pagó la cancha N veces. De por vida.<br><br><strong style='color:#fde047'>📋 DT</strong> — Kuza y Batata. Sin sueldo.<br><br><strong style='color:#94a3b8'>💨 Humo ×N</strong> — Confirmó y no apareció N veces. No resta puntos pero queda grabado para siempre.<br><br><strong style='color:#fca5a5'>🚑 SAF ×N</strong> — Sin Actividad Física. Confirmó, no jugó, pero fue a ver. No afecta puntos.<br><br><strong style='color:#cbd5e1'>🧱 Inamovible</strong> — Nunca fue Humo ni SAF, y está en el top 16. El más confiable.<br><br><strong style='color:#fcd34d'>🎯 Goleador</strong> — Top 3 histórico de goles. Dinámico.<br><br><strong style='color:#fde047'>👑 Leyenda</strong> — El que más partidos jugó. Compartible.<br><br><strong style='color:#4ade80'>⚡ Máquina</strong> — El jugador con más victorias absolutas.<br><br><strong style='color:#94a3b8'>🪦 Lastre</strong> — El jugador con más derrotas absolutas.<br><br><strong style='color:#fbbf24'>🏆 Brunato ×N</strong> — Ganó el Premio Brunato N veces. Suma 2 puntos cada vez.<br><br><strong style='color:#22d3ee'>🧤 GDO ×N</strong> — Ganó el Guante de Oro N veces. El mejor arquero del partido. Suma +1 pt cada vez.<br><br><strong style='color:#f87171'>💀 Mala racha</strong> — Tuvo la racha de ausencias más larga."], {"cat": "🏆 El Premio Brunato"}, ["¿Qué es el Premio Brunato?", "Nadie lo sabe con exactitud. Lo que sí se sabe es que el que lo gana no juega por varios partidos después."], {"cat": "🌟 EMISAO CR7"}, ["¿Quién es EMISAO CR7?", "El mejor jugador del fútbol martes. 25 partidos jugados, 76% de asistencia, 12 victorias. Y lo más importante: ganador del Brunato del Año 2025, el premio más prestigioso del grupo. Tiene sección exclusiva en esta web. Los datos no mienten."], ["¿Qué paga el gol de EMISAO CR7 antes de la media hora?", "Kuza: 7,3."], {"cat": "🌐 La Web"}, ["¿Esta página me va a hackear?", "Según Manolo, sí. Según el resto, no."], ["¿Por qué el grupo no sabía que esta página existía?", "Buena pregunta, Kuza. Muy buena pregunta."], {"cat": "🍺 Donaciones y Rescate"}, ["¿Cómo puedo apoyar el proyecto?", "🍺 Invitanos una Heineken — Coordiná con la Administración."], ["¿Qué es el Rescate Heineken?", "Si llegás a 0 monedas en Apuestas, el sistema te declara oficialmente Quebrado 🍺. Eso significa que debés una ronda de Heineken en GRUN el próximo martes. Una vez que la ronda está servida y aceptada por el grupo, el Admin te recarga 500 monedas para que puedas seguir apostando. No hay negociación, no hay descuento, no hay Stella Artois. Heineken o Heineken."]];
 
 function renderFAQ(){
   var el=document.getElementById('faq-list');
