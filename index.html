@@ -4074,10 +4074,7 @@ async function loadBetSaldos(){
 }
 
 async function resetSaldo(player, amount){
-  if(!confirm(`¿Resetear saldo de ${player} a ${amount} monedas? Se borrarán también todas sus apuestas pendientes.`))return;
-  // Delete pending bets (no result yet)
-  await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(player)}&payout=is.null`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
-  // Reset balance
+  if(!confirm(`¿Resetear saldo de ${player} a ${amount} monedas?`))return;
   await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify({balance:amount,updated_at:new Date().toISOString()})});
   showToast(`${player} reseteado a ${amount} 🪙`,'ok');
   loadBetSaldos();
