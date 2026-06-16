@@ -1487,6 +1487,7 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         <button class="atab" onclick="adminTab('emisao-admin',this)" style="color:#F59E0B">EMISAO CR7</button>
         <button class="atab" onclick="adminTab('exportar',this)">Exportar HTML</button>
         <button class="atab" onclick="adminTab('votaciones',this)" style="color:#fbbf24">🗳️ Votaciones</button>
+        <button class="atab" onclick="adminTab('bet-admin',this)" style="color:#4ade80">🎰 Apuestas</button>
       </div>
 
       <!-- NUEVO PARTIDO -->
@@ -1743,6 +1744,67 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
         </div>
         <div id="admin-votos-result"></div>
       </div>
+
+      <div class="apanel card" id="ap-bet-admin">
+        <div class="card-title" style="color:#4ade80;margin-bottom:16px">🎰 Gestión de apuestas</div>
+
+        <!-- Tabs dentro de admin apuestas -->
+        <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="atab active" id="bet-tab-crear" onclick="betAdminTab('crear',this)">➕ Crear preguntas</button>
+          <button class="atab" id="bet-tab-resultados" onclick="betAdminTab('resultados',this)">✅ Marcar resultados</button>
+          <button class="atab" id="bet-tab-ver" onclick="betAdminTab('ver',this)">👁️ Ver apuestas</button>
+          <button class="atab" id="bet-tab-saldos" onclick="betAdminTab('saldos',this)">🪙 Saldos</button>
+        </div>
+
+        <!-- CREAR PREGUNTAS -->
+        <div id="bet-panel-crear">
+          <div class="form-group">
+            <label class="flabel">Partido</label>
+            <select class="fselect" id="bet-admin-match-crear" onchange="loadBetQuestionsList()">
+              <option value="">— Elegir partido —</option>
+            </select>
+          </div>
+          <div id="bet-questions-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+          <div class="form-group">
+            <label class="flabel">Nueva pregunta</label>
+            <input type="text" class="finput" id="bet-new-q" placeholder="¿Gol de Emi antes del min 30?">
+          </div>
+          <div class="form-group">
+            <label class="flabel">Cuota inicial</label>
+            <input type="number" class="finput" id="bet-new-odds" placeholder="2.0" step="0.1" min="1.1" max="20" value="2.0">
+          </div>
+          <button class="btn-p" onclick="addBetQuestion()">AGREGAR PREGUNTA</button>
+        </div>
+
+        <!-- MARCAR RESULTADOS -->
+        <div id="bet-panel-resultados" style="display:none">
+          <div class="form-group">
+            <label class="flabel">Partido</label>
+            <select class="fselect" id="bet-admin-match-result" onchange="loadBetResultPanel()">
+              <option value="">— Elegir partido —</option>
+            </select>
+          </div>
+          <div id="bet-result-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"></div>
+          <button class="btn-p" id="bet-save-results-btn" onclick="saveBetResults()" style="display:none">GUARDAR Y CALCULAR PAGOS</button>
+        </div>
+
+        <!-- VER APUESTAS -->
+        <div id="bet-panel-ver" style="display:none">
+          <div class="form-group">
+            <label class="flabel">Partido</label>
+            <select class="fselect" id="bet-admin-match-ver" onchange="loadBetAdminView()">
+              <option value="">— Elegir partido —</option>
+            </select>
+          </div>
+          <div id="bet-admin-view-result"></div>
+        </div>
+
+        <!-- SALDOS -->
+        <div id="bet-panel-saldos" style="display:none">
+          <div id="bet-saldos-list"></div>
+          <button class="btn-p" onclick="loadBetSaldos()" style="margin-top:12px">ACTUALIZAR</button>
+        </div>
+      </div>
     </div>
   <!-- FOOTER -->
   <div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--border);text-align:center">
@@ -1971,8 +2033,9 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
   <!-- APUESTAS -->
   <div class="section" id="s-apuestas">
     <div class="section-title" style="color:#4ade80">🎰 APUESTAS</div>
-    <div class="section-sub">¿Quién la ve venir?</div>
+    <div class="section-sub">¿Quién la ve venir? Apostá antes de las 20:00 del martes</div>
 
+    <!-- LOGIN -->
     <div id="apuestas-login" class="card" style="max-width:400px">
       <div class="card-title" style="margin-bottom:14px">¿Quién sos?</div>
       <div class="form-group">
@@ -1989,12 +2052,86 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
       <button class="btn-p" onclick="apuestasLogin()">ENTRAR</button>
     </div>
 
-    <div id="apuestas-panel" style="display:none;max-width:480px">
-      <div class="card" style="text-align:center;padding:32px 24px">
-        <div style="font-size:48px;margin-bottom:16px">🎰</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:#4ade80;margin-bottom:8px">HOLA TIMBERO</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;color:var(--grey);letter-spacing:2px">PRÓXIMAMENTE NOS VEREMOS POR ACÁ</div>
+    <!-- PANEL PRINCIPAL -->
+    <div id="apuestas-panel" style="display:none;max-width:520px">
+
+      <!-- Header con saldo -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div id="apuestas-bienvenida" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:var(--teal);letter-spacing:1px"></div>
+        <div style="text-align:right">
+          <div id="apuestas-saldo-display" style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#4ade80"></div>
+          <div style="font-size:10px;color:var(--grey);font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">MONEDAS</div>
+        </div>
       </div>
+
+      <!-- Tabs -->
+      <div style="display:flex;gap:6px;margin-bottom:16px">
+        <button class="atab active" id="abet-tab-apostar" onclick="apuestasTab('apostar',this)">🎰 Apostar</button>
+        <button class="atab" id="abet-tab-historial" onclick="apuestasTab('historial',this)">📋 Mis apuestas</button>
+        <button class="atab" id="abet-tab-ranking" onclick="apuestasTab('ranking',this)">🏆 Ranking</button>
+        <button class="atab" id="abet-tab-faq" onclick="apuestasTab('faq',this)">❓ Cómo funciona</button>
+      </div>
+
+      <!-- APOSTAR -->
+      <div id="abet-panel-apostar">
+        <div class="form-group" style="margin-bottom:16px">
+          <label class="flabel">Partido</label>
+          <select class="fselect" id="apuestas-match-sel" onchange="loadApuestasMatch()">
+            <option value="">— Elegir partido —</option>
+          </select>
+        </div>
+        <div id="apuestas-questions-wrap"></div>
+        <div id="apuestas-confirm-wrap" style="display:none;margin-top:12px">
+          <div id="apuestas-ya-apostó" style="display:none">
+            <div class="card" style="text-align:center;padding:20px">
+              <div style="font-size:28px;margin-bottom:6px">✅</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#4ade80">Apuesta registrada</div>
+              <div style="font-size:12px;color:var(--grey);margin-top:4px">Ya apostaste en este partido. Suerte 🤞</div>
+            </div>
+          </div>
+          <div id="apuestas-form-submit">
+            <div id="apuestas-resumen" style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.2);border-radius:8px;padding:12px;margin-bottom:10px;font-size:12px;color:var(--grey-light)"></div>
+            <button class="btn-p" onclick="submitApuestas()" style="width:100%;background:#4ade80;color:#000">CONFIRMAR APUESTAS</button>
+            <div style="font-size:11px;color:var(--grey);text-align:center;margin-top:6px;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">No se puede cambiar una vez confirmado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MIS APUESTAS -->
+      <div id="abet-panel-historial" style="display:none">
+        <div id="apuestas-historial-wrap"></div>
+      </div>
+
+      <!-- RANKING -->
+      <div id="abet-panel-ranking" style="display:none">
+        <div id="apuestas-ranking-wrap"></div>
+      </div>
+
+      <!-- FAQ -->
+      <div id="abet-panel-faq" style="display:none">
+        <div class="card">
+          <div class="card-title" style="color:#4ade80;margin-bottom:12px">🎰 ¿Cómo funciona?</div>
+          <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--grey-light);line-height:1.6">
+            <div><strong style="color:var(--white)">Las monedas</strong><br>Arrancás con 1000 🪙. Apostás a preguntas sobre el partido y si acertás multiplicás según la cuota. Si errás perdés lo apostado.</div>
+            <div><strong style="color:var(--white)">Las cuotas</strong><br>Cuanto más gente apuesta a una opción, más baja la cuota. El que apuesta primero gana mejor precio — ¡apurate!</div>
+            <div><strong style="color:var(--white)">Máximo por pregunta</strong><br>250 monedas por pregunta. Podés apostar en todas las que quieras.</div>
+            <div><strong style="color:var(--white)">¿Cuándo se cierra?</strong><br>A las 20:00 del martes, antes del partido. Después no se puede apostar más.</div>
+            <div><strong style="color:var(--white)">¿Puedo cambiar mi apuesta?</strong><br>No. Confirmaste, confirmaste.</div>
+            <div><strong style="color:var(--white)">¿Qué pasa si quiebro?</strong><br>Invitás una ronda de Heineken en GRUN 🍺 y te recargamos 500 monedas para seguir apostando.</div>
+            <div><strong style="color:var(--white)">¿Hay plata de por medio?</strong><br>No. Solo gloria, vergüenza, y Heineken.</div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="card-title" style="color:#4ade80;margin-bottom:12px">🏅 Badges</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--grey-light)">
+            <div><span style="font-size:16px">🔮</span> <strong style="color:var(--white)">El Profeta</strong> — mayor % de aciertos (mín. 10 apuestas)</div>
+            <div><span style="font-size:16px">💀</span> <strong style="color:var(--white)">El Ciego</strong> — menor % de aciertos</div>
+            <div><span style="font-size:16px">🎲</span> <strong style="color:var(--white)">El Kamikaze</strong> — apostó 250 en cuota mayor a 4x y acertó</div>
+            <div><span style="font-size:16px">🍺</span> <strong style="color:var(--white)">Quebrado</strong> — llegó a 0 monedas y necesitó rescate Heineken</div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -3432,6 +3569,14 @@ async function loadAdminVotos(){
     </div>`;
 }
 
+// ══════════════════════════════════════════
+// APUESTAS
+// ══════════════════════════════════════════
+let apuestasUser=null;
+let apuestasMatchId=null;
+let apuestasSaldo=0;
+let apuestasAnswers={};// questionId -> {answer:bool, amount:int}
+
 function initApuestas(){
   const sel=document.getElementById('apuestas-nombre');
   if(!sel||sel.options.length>1)return;
@@ -3452,7 +3597,472 @@ async function apuestasLogin(){
   document.getElementById('apuestas-error').style.display='none';
   document.getElementById('apuestas-login').style.display='none';
   document.getElementById('apuestas-panel').style.display='block';
+  apuestasUser=name;
+  document.getElementById('apuestas-bienvenida').textContent=`Hola ${name} 🎰`;
+  await loadApuestasSaldo();
+  initApuestasMatchSel();
 }
+
+async function loadApuestasSaldo(){
+  const r=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(apuestasUser)}`,{headers:SBH});
+  const data=await r.json();
+  if(!data.length){
+    // Create balance record
+    await fetch(`${SB_URL}/rest/v1/bet_balances`,{method:'POST',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify({player:apuestasUser,balance:1000})});
+    apuestasSaldo=1000;
+  } else {
+    apuestasSaldo=data[0].balance;
+  }
+  document.getElementById('apuestas-saldo-display').textContent=`🪙 ${apuestasSaldo}`;
+}
+
+function initApuestasMatchSel(){
+  const sel=document.getElementById('apuestas-match-sel');
+  if(!sel||sel.options.length>1)return;
+  const sorted=[...DB.matches].filter(m=>m.date>='2026-06-09').sort((a,b)=>b.date.localeCompare(a.date));
+  sorted.forEach(m=>{
+    const o=document.createElement('option');
+    o.value=m._id;
+    const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+    o.textContent=ds;
+    sel.appendChild(o);
+  });
+}
+
+function apuestasTab(id,btn){
+  document.querySelectorAll('[id^="abet-tab-"]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('[id^="abet-panel-"]').forEach(p=>p.style.display='none');
+  btn.classList.add('active');
+  document.getElementById('abet-panel-'+id).style.display='block';
+  if(id==='historial')loadApuestasHistorial();
+  if(id==='ranking')loadApuestasRanking();
+}
+
+async function loadApuestasMatch(){
+  const sel=document.getElementById('apuestas-match-sel');
+  apuestasMatchId=sel.value;
+  apuestasAnswers={};
+  const wrap=document.getElementById('apuestas-questions-wrap');
+  const confirmWrap=document.getElementById('apuestas-confirm-wrap');
+  wrap.innerHTML='';
+  confirmWrap.style.display='none';
+  if(!apuestasMatchId)return;
+
+  // Check if closed (after 20:00 Tuesday)
+  const match=DB.matches.find(m=>m._id===apuestasMatchId);
+  const now=new Date();
+  const matchDate=new Date(match.date+'T20:00:00');
+  const isClosed=now>=matchDate;
+
+  // Get questions
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(apuestasMatchId)}&order=id`,{headers:SBH});
+  const questions=await r.json();
+
+  if(!questions.length){
+    wrap.innerHTML='<div class="empty">No hay preguntas cargadas para este partido todavía.</div>';
+    return;
+  }
+
+  // Check if already bet
+  const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}&player=eq.${encodeURIComponent(apuestasUser)}`,{headers:SBH});
+  const existing=await rb.json();
+
+  if(existing.length>0){
+    // Show existing bets
+    wrap.innerHTML=questions.map(q=>{
+      const myBet=existing.find(b=>b.question_id===q.id);
+      const resultIcon=q.result===true?'✅':q.result===false?'❌':'⏳';
+      const won=myBet&&q.result!==null&&myBet.answer===q.result;
+      return`<div class="card" style="padding:12px;${won?'border:1px solid rgba(74,222,128,0.4)':''}">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
+        ${myBet?`<div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;color:${myBet.answer?'#4ade80':'#f87171'}">${myBet.answer?'✅ SÍ':'❌ NO'} · ${myBet.amount}🪙 x${myBet.odds_at_bet}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${won?'#4ade80':q.result!==null?'#f87171':'#94a3b8'}">${q.result!==null?(won?`+${myBet.payout||0}🪙`:`-${myBet.amount}🪙`):'⏳'} ${resultIcon}</div>
+        </div>`:`<div style="font-size:11px;color:var(--grey)">No apostaste en esta</div>`}
+      </div>`;
+    }).join('');
+    document.getElementById('apuestas-ya-apostó').style.display='block';
+    document.getElementById('apuestas-form-submit').style.display='none';
+    confirmWrap.style.display='block';
+    return;
+  }
+
+  if(isClosed){
+    wrap.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:28px;margin-bottom:8px">🔒</div><div style="font-family:\'Bebas Neue\',sans-serif;font-size:18px;color:#f87171;letter-spacing:2px">APUESTAS CERRADAS</div><div style="font-size:12px;color:var(--grey);margin-top:6px">Las apuestas cerraron a las 20:00. Resultados pendientes.</div></div>';
+    return;
+  }
+
+  // Get all bets for odds calculation
+  const rallBets=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(apuestasMatchId)}`,{headers:SBH});
+  const allBets=await rallBets.json();
+
+  wrap.innerHTML=questions.map(q=>{
+    const yesTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===true).reduce((s,b)=>s+b.amount,0);
+    const noTotal=allBets.filter(b=>b.question_id===q.id&&b.answer===false).reduce((s,b)=>s+b.amount,0);
+    const total=yesTotal+noTotal;
+    const yesOdds=total>0?Math.max(1.05,Math.round((total+50)/(yesTotal+25)*10)/10):q.initial_odds;
+    const noOdds=total>0?Math.max(1.05,Math.round((total+50)/(noTotal+25)*10)/10):q.initial_odds;
+    return`<div class="card" style="padding:12px" id="bq-${q.id}">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button onclick="selectBetAnswer(${q.id},'yes',${yesOdds},this)" id="bq-yes-${q.id}"
+          style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(74,222,128,0.3);background:rgba(74,222,128,0.06);color:#4ade80;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px">
+          ✅ SÍ &nbsp;<span style="font-size:12px">x${yesOdds}</span>
+        </button>
+        <button onclick="selectBetAnswer(${q.id},'no',${noOdds},this)" id="bq-no-${q.id}"
+          style="flex:1;padding:10px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.06);color:#f87171;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px">
+          ❌ NO &nbsp;<span style="font-size:12px">x${noOdds}</span>
+        </button>
+      </div>
+      <div id="bq-amount-${q.id}" style="display:none">
+        <div style="display:flex;align-items:center;gap:8px">
+          <label style="font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--grey);white-space:nowrap">Monedas (máx 250)</label>
+          <input type="number" min="10" max="250" value="100" id="bq-amt-${q.id}"
+            style="flex:1;background:var(--bg-card);border:1px solid var(--border);color:var(--white);padding:6px 10px;border-radius:6px;font-size:14px"
+            oninput="updateBetResumen()">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;color:#4ade80;white-space:nowrap" id="bq-pot-${q.id}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  confirmWrap.style.display='block';
+  document.getElementById('apuestas-ya-apostó').style.display='none';
+  document.getElementById('apuestas-form-submit').style.display='block';
+}
+
+function selectBetAnswer(qId,answer,odds,btn){
+  const isYes=answer==='yes';
+  const yesBtn=document.getElementById(`bq-yes-${qId}`);
+  const noBtn=document.getElementById(`bq-no-${qId}`);
+  yesBtn.style.fontWeight=isYes?'900':'normal';
+  yesBtn.style.borderColor=isYes?'#4ade80':'rgba(74,222,128,0.3)';
+  yesBtn.style.background=isYes?'rgba(74,222,128,0.2)':'rgba(74,222,128,0.06)';
+  noBtn.style.fontWeight=!isYes?'900':'normal';
+  noBtn.style.borderColor=!isYes?'#f87171':'rgba(239,68,68,0.3)';
+  noBtn.style.background=!isYes?'rgba(239,68,68,0.2)':'rgba(239,68,68,0.06)';
+  document.getElementById(`bq-amount-${qId}`).style.display='block';
+  apuestasAnswers[qId]={answer:isYes,odds};
+  updateBetResumen();
+}
+
+function updateBetResumen(){
+  let totalBet=0;
+  const lines=[];
+  for(const [qId,ans] of Object.entries(apuestasAnswers)){
+    const inp=document.getElementById(`bq-amt-${qId}`);
+    if(!inp)continue;
+    let amt=Math.min(250,Math.max(10,parseInt(inp.value)||100));
+    inp.value=amt;
+    totalBet+=amt;
+    const pot=Math.round(amt*ans.odds);
+    document.getElementById(`bq-pot-${qId}`).textContent=`→ ${pot}🪙`;
+    lines.push(`${ans.answer?'SÍ':'NO'} · ${amt}🪙 x${ans.odds} = ${pot}🪙`);
+    apuestasAnswers[qId].amount=amt;
+  }
+  const resumen=document.getElementById('apuestas-resumen');
+  if(resumen){
+    const saldoRestante=apuestasSaldo-totalBet;
+    resumen.innerHTML=`<strong style="color:var(--white)">Resumen:</strong><br>${lines.join('<br>')}<br><br>Total apostado: <strong style="color:#fbbf24">${totalBet}🪙</strong> · Saldo restante: <strong style="color:${saldoRestante<0?'#f87171':'#4ade80'}">${saldoRestante}🪙</strong>`;
+    const btn=document.querySelector('[onclick="submitApuestas()"]');
+    if(btn)btn.disabled=saldoRestante<0;
+  }
+}
+
+async function submitApuestas(){
+  const entries=Object.entries(apuestasAnswers);
+  if(!entries.length){showToast('No seleccionaste ninguna apuesta','err');return;}
+  let totalBet=0;
+  for(const [,ans] of entries)totalBet+=ans.amount||100;
+  if(totalBet>apuestasSaldo){showToast('Saldo insuficiente','err');return;}
+
+  const btn=document.querySelector('[onclick="submitApuestas()"]');
+  if(btn){btn.textContent='Guardando...';btn.disabled=true;}
+
+  try{
+    // Save each answer
+    for(const [qId,ans] of entries){
+      const amount=ans.amount||100;
+      await fetch(`${SB_URL}/rest/v1/bet_answers`,{
+        method:'POST',
+        headers:{...SBH,'Prefer':'return=minimal'},
+        body:JSON.stringify({
+          question_id:parseInt(qId),
+          match_id:parseInt(apuestasMatchId),
+          player:apuestasUser,
+          answer:ans.answer,
+          amount,
+          odds_at_bet:ans.odds
+        })
+      });
+    }
+    // Deduct from balance
+    const newBalance=apuestasSaldo-totalBet;
+    await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(apuestasUser)}`,{
+      method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+      body:JSON.stringify({balance:newBalance,updated_at:new Date().toISOString()})
+    });
+    apuestasSaldo=newBalance;
+    document.getElementById('apuestas-saldo-display').textContent=`🪙 ${newBalance}`;
+    showToast('Apuestas registradas ✓','ok');
+    await loadApuestasMatch();
+  }catch(e){
+    showToast('Error al guardar','err');
+    if(btn){btn.textContent='CONFIRMAR APUESTAS';btn.disabled=false;}
+  }
+}
+
+async function loadApuestasHistorial(){
+  const wrap=document.getElementById('apuestas-historial-wrap');
+  wrap.innerHTML='<div class="empty">Cargando...</div>';
+  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&order=created_at.desc`,{headers:SBH});
+  const bets=await r.json();
+  if(!bets.length){wrap.innerHTML='<div class="empty">Todavía no apostaste en ningún partido</div>';return;}
+  const won=bets.filter(b=>b.payout!==null&&b.payout>b.amount).length;
+  const lost=bets.filter(b=>b.payout!==null&&b.payout===0).length;
+  const total=bets.filter(b=>b.payout!==null).length;
+  wrap.innerHTML=`<div class="card" style="text-align:center;margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#4ade80">${won}</div><div style="font-size:10px;color:var(--grey)">GANADAS</div></div>
+      <div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#f87171">${lost}</div><div style="font-size:10px;color:var(--grey)">PERDIDAS</div></div>
+      <div><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:#94a3b8">${total>0?Math.round(won/total*100):0}%</div><div style="font-size:10px;color:var(--grey)">ACIERTOS</div></div>
+    </div>
+  </div>
+  ${bets.slice(0,20).map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:4px">
+    <div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--white)">${b.answer?'✅ SÍ':'❌ NO'}</div>
+      <div style="font-size:10px;color:var(--grey)">${b.amount}🪙 x${b.odds_at_bet}</div>
+    </div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:${b.payout===null?'#94a3b8':b.payout>b.amount?'#4ade80':'#f87171'}">
+      ${b.payout===null?'⏳':b.payout>b.amount?`+${b.payout}🪙`:`-${b.amount}🪙`}
+    </div>
+  </div>`).join('')}`;
+}
+
+async function loadApuestasRanking(){
+  const wrap=document.getElementById('apuestas-ranking-wrap');
+  wrap.innerHTML='<div class="empty">Cargando...</div>';
+  const r=await fetch(`${SB_URL}/rest/v1/bet_balances?order=balance.desc`,{headers:SBH});
+  const balances=await r.json();
+  if(!balances.length){wrap.innerHTML='<div class="empty">Sin datos de ranking todavía</div>';return;}
+  wrap.innerHTML=`<div class="card"><div class="card-title" style="margin-bottom:12px">🏆 Ranking de apostadores</div>
+    ${balances.map((b,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--grey);width:24px">${i+1}</div>
+      <div style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:${b.player===apuestasUser?'var(--teal)':'var(--white)'}">${b.player}${b.player===apuestasUser?' (vos)':''}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${b.balance>=1000?'#4ade80':b.balance<200?'#f87171':'#fbbf24'}">🪙 ${b.balance}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ── ADMIN APUESTAS ────────────────────────────────────────────────
+function betAdminTab(id,btn){
+  document.querySelectorAll('[id^="bet-tab-"]').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('[id^="bet-panel-"]').forEach(p=>p.style.display='none');
+  btn.classList.add('active');
+  document.getElementById('bet-panel-'+id).style.display='block';
+  if(id==='saldos')loadBetSaldos();
+}
+
+function initBetAdmin(){
+  const selectors=['bet-admin-match-crear','bet-admin-match-result','bet-admin-match-ver'];
+  selectors.forEach(sid=>{
+    const sel=document.getElementById(sid);
+    if(!sel||sel.options.length>1)return;
+    const sorted=[...DB.matches].filter(m=>m.date>='2026-06-09').sort((a,b)=>b.date.localeCompare(a.date));
+    sorted.forEach(m=>{
+      const o=document.createElement('option');
+      o.value=m._id;
+      const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+      o.textContent=ds;
+      sel.appendChild(o);
+    });
+  });
+}
+
+async function addBetQuestion(){
+  const matchId=document.getElementById('bet-admin-match-crear').value;
+  const q=document.getElementById('bet-new-q').value.trim();
+  const odds=parseFloat(document.getElementById('bet-new-odds').value)||2.0;
+  if(!matchId||!q){showToast('Elegí partido y escribí la pregunta','err');return;}
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions`,{
+    method:'POST',headers:{...SBH,'Prefer':'return=minimal'},
+    body:JSON.stringify({match_id:parseInt(matchId),question:q,initial_odds:odds})
+  });
+  if(r.ok||r.status===201){
+    showToast('Pregunta agregada ✓','ok');
+    document.getElementById('bet-new-q').value='';
+    loadBetQuestionsList();
+  }
+}
+
+async function loadBetQuestionsList(){
+  const matchId=document.getElementById('bet-admin-match-crear').value;
+  const el=document.getElementById('bet-questions-list');
+  if(!matchId){el.innerHTML='';return;}
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const qs=await r.json();
+  if(!qs.length){el.innerHTML='<div class="empty" style="font-size:12px">Sin preguntas todavía</div>';return;}
+  el.innerHTML=qs.map(q=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;gap:8px">
+    <div style="flex:1;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white)">${q.question}</div>
+    <div style="font-size:12px;color:#4ade80;white-space:nowrap">x${q.initial_odds}</div>
+    <button onclick="deleteBetQuestion(${q.id})" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif">BORRAR</button>
+  </div>`).join('');
+}
+
+async function deleteBetQuestion(id){
+  if(!confirm('¿Borrar esta pregunta? Se borran también las apuestas relacionadas.'))return;
+  await fetch(`${SB_URL}/rest/v1/bet_answers?question_id=eq.${id}`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  await fetch(`${SB_URL}/rest/v1/bet_questions?id=eq.${id}`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  showToast('Pregunta borrada','ok');
+  loadBetQuestionsList();
+}
+
+async function loadBetResultPanel(){
+  const matchId=document.getElementById('bet-admin-match-result').value;
+  const el=document.getElementById('bet-result-list');
+  document.getElementById('bet-save-results-btn').style.display='none';
+  if(!matchId){el.innerHTML='';return;}
+  const r=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const qs=await r.json();
+  if(!qs.length){el.innerHTML='<div class="empty">Sin preguntas para este partido</div>';return;}
+  el.innerHTML=qs.map(q=>`<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:6px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:8px">${q.question}</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="setBetResult(${q.id},'yes',this)" style="flex:1;padding:8px;border-radius:6px;border:1px solid ${q.result===true?'#4ade80':'rgba(74,222,128,0.3)'};background:${q.result===true?'rgba(74,222,128,0.2)':'rgba(74,222,128,0.06)'};color:#4ade80;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:14px" data-qid="${q.id}" data-ans="yes">✅ SÍ</button>
+      <button onclick="setBetResult(${q.id},'no',this)" style="flex:1;padding:8px;border-radius:6px;border:1px solid ${q.result===false?'#f87171':'rgba(239,68,68,0.3)'};background:${q.result===false?'rgba(239,68,68,0.2)':'rgba(239,68,68,0.06)'};color:#f87171;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:14px" data-qid="${q.id}" data-ans="no">❌ NO</button>
+    </div>
+  </div>`).join('');
+  document.getElementById('bet-save-results-btn').style.display='block';
+}
+
+const betResults={};
+function setBetResult(qId,answer,btn){
+  const isYes=answer==='yes';
+  betResults[qId]=isYes;
+  const container=btn.parentElement;
+  container.querySelectorAll('button').forEach(b=>{
+    const bYes=b.dataset.ans==='yes';
+    b.style.borderColor=bYes?(isYes?'#4ade80':'rgba(74,222,128,0.3)'):(isYes?'rgba(239,68,68,0.3)':'#f87171');
+    b.style.background=bYes?(isYes?'rgba(74,222,128,0.2)':'rgba(74,222,128,0.06)'):(isYes?'rgba(239,68,68,0.06)':'rgba(239,68,68,0.2)');
+  });
+}
+
+async function saveBetResults(){
+  const matchId=document.getElementById('bet-admin-match-result').value;
+  if(!matchId||!Object.keys(betResults).length){showToast('Marcá al menos un resultado','err');return;}
+  const btn=document.getElementById('bet-save-results-btn');
+  btn.textContent='Calculando...';btn.disabled=true;
+
+  for(const [qId,result] of Object.entries(betResults)){
+    // Update question result
+    await fetch(`${SB_URL}/rest/v1/bet_questions?id=eq.${qId}`,{
+      method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+      body:JSON.stringify({result,closed:true})
+    });
+    // Get all bets for this question
+    const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?question_id=eq.${qId}`,{headers:SBH});
+    const bets=await rb.json();
+    // Calculate and update payouts
+    for(const bet of bets){
+      const won=bet.answer===result;
+      const payout=won?Math.round(bet.amount*bet.odds_at_bet):0;
+      await fetch(`${SB_URL}/rest/v1/bet_answers?id=eq.${bet.id}`,{
+        method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+        body:JSON.stringify({payout})
+      });
+      // Update balance
+      if(won&&payout>0){
+        const rb2=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{headers:SBH});
+        const bd=await rb2.json();
+        if(bd.length){
+          const newBal=bd[0].balance+payout;
+          await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bet.player)}`,{
+            method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+            body:JSON.stringify({balance:newBal,updated_at:new Date().toISOString()})
+          });
+        }
+      }
+    }
+  }
+  showToast('Resultados guardados y pagos calculados ✓','ok');
+  btn.textContent='GUARDAR Y CALCULAR PAGOS';btn.disabled=false;
+}
+
+async function loadBetAdminView(){
+  const matchId=document.getElementById('bet-admin-match-ver').value;
+  const el=document.getElementById('bet-admin-view-result');
+  if(!matchId){el.innerHTML='';return;}
+  const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
+  const qs=await rq.json();
+  if(!qs.length){el.innerHTML='<div class="empty">Sin preguntas</div>';return;}
+  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(matchId)}&order=created_at`,{headers:SBH});
+  const answers=await ra.json();
+  el.innerHTML=qs.map(q=>{
+    const qAnswers=answers.filter(a=>a.question_id===q.id);
+    const yesCount=qAnswers.filter(a=>a.answer).length;
+    const noCount=qAnswers.filter(a=>!a.answer).length;
+    return`<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:12px;margin-bottom:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--white);margin-bottom:6px">${q.question} ${q.result===true?'✅':q.result===false?'❌':'⏳'}</div>
+      <div style="font-size:12px;color:var(--grey);margin-bottom:6px">SÍ: ${yesCount} · NO: ${noCount} · Total: ${qAnswers.length}</div>
+      ${qAnswers.map(a=>`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:12px;border-bottom:1px solid var(--border)">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white)">${a.player}</span>
+        <span style="color:${a.answer?'#4ade80':'#f87171'}">${a.answer?'SÍ':'NO'} · ${a.amount}🪙 x${a.odds_at_bet}</span>
+        <span style="color:${a.payout===null?'#94a3b8':a.payout>0?'#4ade80':'#f87171'}">${a.payout===null?'⏳':a.payout>0?`+${a.payout}🪙`:`-${a.amount}🪙`}</span>
+        <button onclick="deleteBetAnswer(${a.id})" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:10px">✕</button>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+async function deleteBetAnswer(id){
+  if(!confirm('¿Borrar esta apuesta?'))return;
+  // Get bet to restore balance
+  const rb=await fetch(`${SB_URL}/rest/v1/bet_answers?id=eq.${id}`,{headers:SBH});
+  const bets=await rb.json();
+  if(bets.length&&bets[0].payout===null){
+    // Restore amount to balance
+    const rb2=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bets[0].player)}`,{headers:SBH});
+    const bd=await rb2.json();
+    if(bd.length){
+      await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(bets[0].player)}`,{
+        method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+        body:JSON.stringify({balance:bd[0].balance+bets[0].amount})
+      });
+    }
+  }
+  await fetch(`${SB_URL}/rest/v1/bet_answers?id=eq.${id}`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  showToast('Apuesta borrada y saldo restaurado','ok');
+  loadBetAdminView();
+}
+
+async function loadBetSaldos(){
+  const el=document.getElementById('bet-saldos-list');
+  const r=await fetch(`${SB_URL}/rest/v1/bet_balances?order=balance.desc`,{headers:SBH});
+  const data=await r.json();
+  if(!data.length){el.innerHTML='<div class="empty">Sin saldos todavía</div>';return;}
+  el.innerHTML=data.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${b.player}</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${b.balance>=500?'#4ade80':b.balance<100?'#f87171':'#fbbf24'}">🪙 ${b.balance}</div>
+      ${b.balance<100?`<button onclick="rescatarJugador('${b.player}')" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🍺 RESCATE</button>`:''}
+    </div>
+  </div>`).join('');
+}
+
+async function rescatarJugador(player){
+  if(!confirm(`¿Rescatar a ${player}? Se le suman 500 monedas. Debe una Heineken.`))return;
+  const rb=await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{headers:SBH});
+  const bd=await rb.json();
+  if(!bd.length)return;
+  const newBal=bd[0].balance+500;
+  await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{
+    method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},
+    body:JSON.stringify({balance:newBal,rescues:(bd[0].rescues||0)+1,updated_at:new Date().toISOString()})
+  });
+  showToast(`${player} rescatado 🍺 +500 monedas · Debe una Heineken`,'ok');
+  loadBetSaldos();
+}
+
+
 
 async function deleteVoto(voter, matchId){
   if(!confirm(`¿Borrar el voto de ${voter}?`))return;
@@ -3862,6 +4472,7 @@ function adminTab(id,btn){
   btn.classList.add('active');
   document.getElementById('ap-'+id).classList.add('active');
   if(id==='votaciones'){try{initAdminVotaciones();}catch(e){console.error('initAdminVotaciones:',e);}}
+  if(id==='bet-admin'){try{initBetAdmin();}catch(e){console.error('initBetAdmin:',e);}}
 }
 
 // JUGADORES ADMIN
