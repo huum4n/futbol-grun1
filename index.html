@@ -3835,8 +3835,9 @@ async function submitApuestas(){
 async function loadApuestasHistorial(){
   const wrap=document.getElementById('apuestas-historial-wrap');
   wrap.innerHTML='<div class="empty">Cargando...</div>';
-  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&order=created_at.desc`,{headers:SBH});
-  const bets=await r.json();
+  const r=await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(apuestasUser)}&order=created_at.desc&select=*`,{headers:SBH});
+  const betsRaw=await r.json();
+  const bets=Array.isArray(betsRaw)?betsRaw:[];
   if(!bets.length){wrap.innerHTML='<div class="empty">Todavía no apostaste en ningún partido</div>';return;}
   const won=bets.filter(b=>b.payout!==null&&b.payout>b.amount).length;
   const lost=bets.filter(b=>b.payout!==null&&b.payout===0).length;
@@ -4015,8 +4016,9 @@ async function loadBetAdminView(){
   const rq=await fetch(`${SB_URL}/rest/v1/bet_questions?match_id=eq.${parseInt(matchId)}&order=id`,{headers:SBH});
   const qs=await rq.json();
   if(!qs.length){el.innerHTML='<div class="empty">Sin preguntas</div>';return;}
-  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(matchId)}&order=created_at`,{headers:SBH});
-  const answers=await ra.json();
+  const ra=await fetch(`${SB_URL}/rest/v1/bet_answers?match_id=eq.${parseInt(matchId)}&order=created_at&select=*`,{headers:SBH});
+  const answersRaw=await ra.json();
+  const answers=Array.isArray(answersRaw)?answersRaw:[];
   el.innerHTML=qs.map(q=>{
     const qAnswers=answers.filter(a=>a.question_id===q.id);
     const yesCount=qAnswers.filter(a=>a.answer).length;
@@ -4060,13 +4062,32 @@ async function loadBetSaldos(){
   const r=await fetch(`${SB_URL}/rest/v1/bet_balances?order=balance.desc`,{headers:SBH});
   const data=await r.json();
   if(!data.length){el.innerHTML='<div class="empty">Sin saldos todavía</div>';return;}
-  el.innerHTML=data.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
+  el.innerHTML=data.map(b=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px;flex-wrap:wrap;gap:6px">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--white)">${b.player}</div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${b.balance>=500?'#4ade80':b.balance<100?'#f87171':'#fbbf24'}">🪙 ${b.balance}</div>
-      ${b.balance<100?`<button onclick="rescatarJugador('${b.player}')" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🍺 RESCATE</button>`:''}
+      <button onclick="resetSaldo('${b.player}',1000)" style="background:rgba(74,222,128,0.15);border:1px solid rgba(74,222,128,0.4);color:#4ade80;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">↺ 1000</button>
+      ${b.balance<200?`<button onclick="rescatarJugador('${b.player}')" style="background:rgba(251,191,36,0.15);border:1px solid rgba(251,191,36,0.4);color:#fbbf24;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🍺 +500</button>`:''}
+      <button onclick="deleteBetsByPlayer('${b.player}')" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:10px;padding:3px 8px;border-radius:4px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px">🗑️ Apuestas</button>
     </div>
   </div>`).join('');
+}
+
+async function resetSaldo(player, amount){
+  if(!confirm(`¿Resetear saldo de ${player} a ${amount} monedas? Se borrarán también todas sus apuestas pendientes.`))return;
+  // Delete pending bets (no result yet)
+  await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(player)}&payout=is.null`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  // Reset balance
+  await fetch(`${SB_URL}/rest/v1/bet_balances?player=eq.${encodeURIComponent(player)}`,{method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify({balance:amount,updated_at:new Date().toISOString()})});
+  showToast(`${player} reseteado a ${amount} 🪙`,'ok');
+  loadBetSaldos();
+}
+
+async function deleteBetsByPlayer(player){
+  if(!confirm(`¿Borrar TODAS las apuestas de ${player}? El saldo no se modifica.`))return;
+  await fetch(`${SB_URL}/rest/v1/bet_answers?player=eq.${encodeURIComponent(player)}`,{method:'DELETE',headers:{...SBH,'Prefer':'return=minimal'}});
+  showToast(`Apuestas de ${player} borradas`,'ok');
+  loadBetSaldos();
 }
 
 async function rescatarJugador(player){
