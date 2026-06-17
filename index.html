@@ -111,15 +111,36 @@ nav{
   color:var(--white);display:flex;align-items:center;gap:8px;
 }
 .nav-brand span{color:var(--teal)}
-.nav-links{display:flex;gap:2px;flex-wrap:wrap}
-.nav-link{
-  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--grey);
-  padding:7px 12px;border-radius:6px;cursor:pointer;border:none;background:none;
-  transition:color 0.2s,background 0.2s;
+.nav-hamburger{
+  width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.05);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:5px;flex-shrink:0;
 }
-.nav-link:hover{color:var(--white);background:rgba(255,255,255,0.05)}
-.nav-link.active{color:var(--white);background:var(--blue)}
+.nav-hamburger span{display:block;width:16px;height:1.5px;background:rgba(255,255,255,0.7);border-radius:2px}
+.nav-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:998;
+}
+.nav-overlay.open{display:block}
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--bg-card);
+  border-right:1px solid var(--border);z-index:999;transform:translateX(-100%);
+  transition:transform 0.25s ease;overflow-y:auto;padding:12px 0;
+}
+.sidebar.open{transform:translateX(0)}
+.sidebar-header{
+  padding:14px 16px 10px;border-bottom:1px solid var(--border);margin-bottom:6px;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--white);
+}
+.sidebar-header span{color:var(--teal)}
+.nav-link{
+  display:flex;align-items:center;gap:10px;width:100%;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--grey);
+  padding:10px 16px;cursor:pointer;border:none;background:none;
+  border-left:2px solid transparent;transition:all 0.15s;text-align:left;
+}
+.nav-link:hover{color:var(--white);background:rgba(255,255,255,0.04)}
+.nav-link.active{color:var(--white);background:rgba(59,130,246,0.1);border-left-color:var(--blue)}
 
 /* SECTIONS */
 .section{display:none;padding:36px 20px;max-width:1160px;margin:0 auto}
@@ -554,19 +575,9 @@ tbody td{padding:10px 14px;font-size:14px;color:var(--text)}
 ═══════════════════════════════════════ */
 @media(max-width:680px){
 
-  /* ── NAV: scrollable tab bar ── */
+  /* ── NAV ── */
   nav{padding:0 12px;height:52px}
   .nav-brand{font-size:16px;letter-spacing:2px;flex-shrink:0}
-  .nav-links{
-    display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;gap:2px;flex-wrap:nowrap;
-    /* keep visible, just scrollable */
-  }
-  .nav-links::-webkit-scrollbar{display:none}
-  .nav-link{
-    font-size:10px;padding:6px 9px;letter-spacing:1px;
-    white-space:nowrap;flex-shrink:0;
-  }
 
   /* ── SECTIONS ── */
   .section{padding:20px 12px}
@@ -888,29 +899,35 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 </div>
 
 <div id="app">
+  <div class="nav-overlay" id="nav-overlay" onclick="closeSidebar()"></div>
   <nav>
-    <div class="nav-brand">⚽ <span>GRUN</span></div>
-    <div class="nav-links">
-      <button class="nav-link active" onclick="showSection('inicio',this)">Inicio</button>
-      <button class="nav-link" onclick="showSection('partidos',this)">🥅 Partidos</button>
-      <button class="nav-link" onclick="showSection('ranking',this)">🏅 Ranking</button>
-      <button class="nav-link" onclick="showSection('jugadores',this)">👤 Jugadores</button>
-      <button class="nav-link" onclick="showSection('goleadores',this)">🎯 Goleadores</button>
-      <button class="nav-link" onclick="showSection('equipos',this)">⚽ Equipos</button>
-      <button class="nav-link" onclick="showSection('estadisticas',this)">📊 Estadísticas</button>
-      <button class="nav-link" onclick="showSection('champagnat',this)">🏫 Champagnat</button>
-      <button class="nav-link" onclick="showSection('brunato',this)" style="color:#F59E0B">🏆 Brunato</button>
-      <button class="nav-link" onclick="showSection('emisao',this)" style="color:#F59E0B">EMISAO CR7</button>
-      <button class="nav-link" onclick="showSection('mundial',this)">🌎 MUNDIAL</button>
-      <button class="nav-link" onclick="showSection('gira',this)" style="color:#22d3ee">🇺🇾 GIRA MVD</button>
-      <button class="nav-link" onclick="showSection('votar',this)" style="color:#fbbf24">🗳️ VOTAR</button>
-      <button class="nav-link" onclick="showSection('apuestas',this)" style="color:#4ade80">🎰 APUESTAS</button>
-      <button class="nav-link" onclick="showSection('faq',this)">📋 FAQ</button>
-      <button class="nav-link" onclick="showSection('tyc',this)">T&amp;C</button>
-      <button class="nav-link" onclick="showSection('admin',this)">🔧 Admin</button>
-
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="nav-hamburger" onclick="toggleSidebar()" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-brand">⚽ <span>GRUN</span></div>
     </div>
   </nav>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">⚽ <span>GRUN</span></div>
+    <button class="nav-link active" onclick="showSection('inicio',this)">🏠 Inicio</button>
+    <button class="nav-link" onclick="showSection('partidos',this)">🥅 Partidos</button>
+    <button class="nav-link" onclick="showSection('ranking',this)">🏅 Ranking</button>
+    <button class="nav-link" onclick="showSection('jugadores',this)">👤 Jugadores</button>
+    <button class="nav-link" onclick="showSection('goleadores',this)">🎯 Goleadores</button>
+    <button class="nav-link" onclick="showSection('equipos',this)">⚽ Equipos</button>
+    <button class="nav-link" onclick="showSection('estadisticas',this)">📊 Estadísticas</button>
+    <button class="nav-link" onclick="showSection('champagnat',this)">🏫 Champagnat</button>
+    <button class="nav-link" onclick="showSection('brunato',this)" style="color:#F59E0B">🏆 Brunato</button>
+    <button class="nav-link" onclick="showSection('emisao',this)" style="color:#F59E0B">⭐ Emisao CR7</button>
+    <button class="nav-link" onclick="showSection('mundial',this)">🌎 Mundial</button>
+    <button class="nav-link" onclick="showSection('gira',this)" style="color:#22d3ee">🇺🇾 Gira MVD</button>
+    <button class="nav-link" onclick="showSection('votar',this)" style="color:#fbbf24">🗳️ Votar</button>
+    <button class="nav-link" onclick="showSection('apuestas',this)" style="color:#4ade80">🎰 Apuestas</button>
+    <button class="nav-link" onclick="showSection('faq',this)">📋 FAQ</button>
+    <button class="nav-link" onclick="showSection('tyc',this)">📄 T&amp;C</button>
+    <button class="nav-link" onclick="showSection('admin',this)">🔧 Admin</button>
+  </div>
 
   <div class="section active" id="s-inicio">
     <div class="section-title" style="font-size:clamp(18px,3.2vw,34px);letter-spacing:2px;line-height:1.15">FUTBOL MARTES<br><span style="color:var(--teal)">20HS · GRUN</span></div>
@@ -2350,6 +2367,15 @@ async function unlockAdmin(){
 document.getElementById('apw').addEventListener('keydown',e=>{if(e.key==='Enter')unlockAdmin()});
 
 // NAV
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('nav-overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('nav-overlay').classList.remove('open');
+}
+
 function showSection(id,btn){
   document.querySelectorAll('video').forEach(v=>{v.pause();v.currentTime=0;});
   const lb=document.getElementById('lightbox');
@@ -2359,6 +2385,7 @@ function showSection(id,btn){
   document.getElementById('s-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   window.scrollTo({top:0,behavior:'instant'});
+  closeSidebar();
   if(id==='votar'){try{initVotar();}catch(e){console.error('initVotar:',e);}}
   if(id==='apuestas'){try{initApuestas();}catch(e){console.error('initApuestas:',e);}}
 }
