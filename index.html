@@ -3594,7 +3594,7 @@ let votarGdo=null;
 function initVotar(){
   const sel=document.getElementById('votar-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Chori','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
   // populate match selector — only from 09/06/2026 onwards
   const ms=document.getElementById('votar-match-sel');
@@ -3744,7 +3744,7 @@ let apuestasAnswers={};// questionId -> {answer:bool, amount:int}
 function initApuestas(){
   const sel=document.getElementById('apuestas-nombre');
   if(!sel||sel.options.length>1)return;
-  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
+  const withPw=['Batata','Bauti','Burro','Cholo','Chona','Chori','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
   withPw.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
 }
 
