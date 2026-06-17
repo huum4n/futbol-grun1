@@ -903,15 +903,18 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
 <div id="app">
   <div class="nav-overlay" id="nav-overlay" onclick="closeSidebar()"></div>
   <nav>
-    <div style="display:flex;align-items:center;gap:12px">
-      <button class="nav-hamburger" onclick="toggleSidebar()" aria-label="Menú">
-        <span></span><span></span><span></span>
-      </button>
-      <div class="nav-brand">⚽ <span>GRUN</span></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="nav-hamburger" onclick="toggleSidebar()" aria-label="Menú">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="nav-brand">⚽ <span>BRUNATO FC</span></div>
+      </div>
+      <div id="nav-user" style="display:none;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--teal);padding:5px 10px;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.25);border-radius:6px"></div>
     </div>
   </nav>
   <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">⚽ <span>GRUN</span></div>
+    <div class="sidebar-header">⚽ <span>BRUNATO FC</span></div>
     <button class="nav-link active" onclick="showSection('inicio',this)">🏠 Inicio</button>
     <button class="nav-link" onclick="showSection('partidos',this)">🥅 Partidos</button>
     <button class="nav-link" onclick="showSection('ranking',this)">🏅 Ranking</button>
@@ -2334,6 +2337,8 @@ async function doLogin(){
         currentUser=data[0].name;
         document.getElementById('login-screen').style.display='none';
         document.getElementById('app').style.display='block';
+        const nu=document.getElementById('nav-user');
+        if(nu){nu.textContent='👤 '+currentUser;nu.style.display='block';}
         initApp();
       } else {
         document.getElementById('le').style.display='block';
