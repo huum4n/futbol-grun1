@@ -849,12 +849,31 @@ input, select { font-size: 16px!important; } /* prevents zoom on focus in iOS */
     <h2>GRUN · Colegio Champagnat</h2>
   </div>
   <div class="login-box">
-    <label>Contraseña</label>
+    <label>Tu clave personal</label>
     <input type="password" id="li" placeholder="••••••••" autocomplete="off">
     <button class="login-btn" onclick="doLogin()">ENTRAR</button>
     <div class="login-error" id="le">Contraseña incorrecta</div>
+    <div style="margin-top:12px;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.5">¿No tenés tu clave? Pedila por privado.</div>
   </div>
   <div class="login-sub">Todo por María · Champagnat</div>
+</div>
+
+<!-- MODAL NOVEDAD CLAVE -->
+<div id="modal-novedad-clave" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:10001;justify-content:center;align-items:center;padding:16px;box-sizing:border-box">
+  <div style="background:var(--bg-card);border-radius:16px;max-width:400px;width:100%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 60px rgba(0,0,0,0.6)">
+    <div style="padding:20px 22px 14px;border-bottom:1px solid var(--border)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:var(--teal);letter-spacing:2px;margin-bottom:4px">NOVEDAD</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--white)">Nueva forma de entrar</div>
+    </div>
+    <div style="padding:16px 22px 22px;font-family:'Barlow',sans-serif;font-size:13px;color:var(--grey-light);line-height:1.7">
+      <p style="margin:0 0 14px">La contraseña <strong style="color:var(--white)">brunato</strong> ya no está disponible. Ahora cada jugador entra con su <strong style="color:var(--white)">clave personal</strong>.</p>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:10px"><span style="color:var(--teal)">→</span><span>Entrás con tu clave e ingresás directo — ya podés votar y apostar sin pasos extra</span></div>
+        <div style="display:flex;gap:10px"><span style="color:var(--teal)">→</span><span>Si no tenés tu clave todavía, pedila por privado</span></div>
+      </div>
+      <button onclick="document.getElementById('modal-novedad-clave').style.display='none'" style="width:100%;background:var(--teal);color:#000;border:none;padding:10px;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer">ENTENDIDO</button>
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -2277,20 +2296,37 @@ async function hashStr(str){
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
+let currentUser=null;
+
 async function doLogin(){
   const v = document.getElementById('li').value;
   const h = await hashStr(v);
-  if(h===PW_VIEW_H||h===PW_ADMIN_H){
+  if(h===PW_ADMIN_H){
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app').style.display='block';
     if(h===PW_ADMIN_H) window._isAdmin=true;
     initApp();
-
   } else {
-    document.getElementById('le').style.display='block';
+    // Check if it's a player's personal password
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/players?password_hash=eq.${h}&select=name`,{headers:{apikey:SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+      const data=await r.json();
+      if(data&&data.length){
+        currentUser=data[0].name;
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('app').style.display='block';
+        initApp();
+      } else {
+        document.getElementById('le').style.display='block';
+      }
+    }catch(e){
+      document.getElementById('le').style.display='block';
+    }
   }
 }
 document.getElementById('li').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+// Show novedad modal on first load
+setTimeout(()=>{const m=document.getElementById('modal-novedad-clave');if(m)m.style.display='flex';},400);
 
 async function unlockAdmin(){
   const v=document.getElementById('apw').value;
@@ -3587,6 +3623,26 @@ let votarBrunato=null;
 let votarGdo=null;
 
 function initVotar(){
+  // If already logged in via main login, skip login panel
+  if(currentUser){
+    document.getElementById('votar-login').style.display='none';
+    document.getElementById('votar-panel').style.display='block';
+    votarUser=currentUser;
+    document.getElementById('votar-bienvenida').textContent=`Hola ${currentUser} 👋 Elegí un partido para votar`;
+    // Populate match selector
+    const ms=document.getElementById('votar-match-sel');
+    if(ms&&ms.options.length<=1){
+      const sorted=[...DB.matches].filter(m=>m.date>='2026-06-09').sort((a,b)=>b.date.localeCompare(a.date));
+      sorted.forEach(m=>{
+        const o=document.createElement('option');
+        o.value=m._id;
+        const ds=new Date(m.date+'T12:00:00').toLocaleDateString('es-AR',{day:'numeric',month:'long',year:'numeric'});
+        o.textContent=ds;
+        ms.appendChild(o);
+      });
+    }
+    return;
+  }
   const sel=document.getElementById('votar-nombre');
   if(!sel||sel.options.length>1)return;
   const withPw=['Batata','Bauti','Burro','Cholo','Chona','Chori','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
@@ -3737,6 +3793,16 @@ let apuestasSaldo=0;
 let apuestasAnswers={};// questionId -> {answer:bool, amount:int}
 
 function initApuestas(){
+  // If already logged in via main login, skip login panel
+  if(currentUser){
+    document.getElementById('apuestas-login').style.display='none';
+    document.getElementById('apuestas-panel').style.display='block';
+    apuestasUser=currentUser;
+    document.getElementById('apuestas-bienvenida').textContent=`Hola ${currentUser} 🎰`;
+    loadApuestasSaldo();
+    initApuestasMatchSel();
+    return;
+  }
   const sel=document.getElementById('apuestas-nombre');
   if(!sel||sel.options.length>1)return;
   const withPw=['Batata','Bauti','Burro','Cholo','Chona','Chori','Clay','Emi','Fede','Fede T','Felix','Gonza','Gordo Figue','Hueso','Kuza','Lucas','Manolo','Manu','Mateo D','Nacho','Nico','Oso','Pablo Ayerza','Paco','Pepo','Pipe','Rama','Rodri','Santi PP','Tatu','Tise','Tony','Toro'];
